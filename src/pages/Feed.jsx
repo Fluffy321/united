@@ -1,15 +1,13 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { dataService, feedRetentionService, shabbatReminderService, storageService, togglePostLike } from '@/services';
+import { dataService, feedRetentionService, shabbatReminderService, togglePostLike } from '@/services';
 import { useAuth } from '@/lib/AuthContext';
 import { appParams } from '@/lib/app-params';
 import { COMMUNITIES_ENABLED } from '@/config/features';
 import { toast } from 'sonner';
 import ReportModal from '@/components/common/ReportModal';
 import NotificationBell from '@/components/notifications/NotificationBell';
-import { ArrowRight, CalendarDays, Heart, MessageCircle, RefreshCw, Search, Users, X } from 'lucide-react';
-import SkeletonCard from '@/components/common/SkeletonCard';
-import QueryError from '@/components/common/QueryError';
+import { CalendarDays, Heart, MessageCircle, RefreshCw, Search, X } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LOCAL_NETWORKS } from '@/lib/localNetworks';
 import DestinationHeader from '@/components/layout/DestinationHeader';
@@ -20,10 +18,8 @@ import MinyanBoard from '@/components/feed/MinyanBoard';
 import JewishCountdown from '@/components/feed/JewishCountdown';
 import UpcomingEventsSheet from '@/components/feed/UpcomingEventsSheet';
 import CommentsSheet from '@/components/feed/CommentsSheet';
-import UnifiedPostCard from '@/components/feed/UnifiedPostCard';
 import CommunitiesFeedView from '@/components/feed/CommunitiesFeedView';
-import HomePriorityStack from '@/components/feed/HomePriorityStack';
-import LiveCategoryDeck from '@/components/feed/LiveCategoryDeck';
+import FiveTownsHomeDashboard from '@/components/home/FiveTownsHomeDashboard';
 import BriefCategoryLaunchpad from '@/components/feed/BriefCategoryLaunchpad';
 import BriefCategorySection from '@/components/feed/BriefCategorySection';
 import WidgetBoundary from '@/components/feed/WidgetBoundary';
@@ -35,7 +31,6 @@ import { FEED_LOAD_TIMEOUT_MS, feedText, getPostLivePriority } from '@/lib/feed/
 import { feedPreferenceKeys, postKeys } from '@/lib/queryKeys';
 import { DEFAULT_BRIEF_CATEGORY_IDS, getBriefCategory } from '@/lib/feed/briefCategories';
 import { classifyBriefCategory, rankBriefItems } from '@/lib/feed/briefRanking';
-import { buildHomePriorityModel } from '@/lib/feed/homePriority';
 import {
   closeBriefCategoryParams,
   closeBriefParams,
@@ -73,7 +68,6 @@ export default function Feed() {
   const [communityGroups, setCommunityGroups] = useState([]);
   const [loadTimedOut, setLoadTimedOut] = useState(false);
   const [publishedBrief, setPublishedBrief] = useState(null);
-  const [showNetworkBanner, setShowNetworkBanner] = useState(() => !storageService.getItem('junited_network_banner_v2_dismissed'));
   const [feedTab, setFeedTab] = useState('general');
   const [activeBriefTab, setActiveBriefTab] = useState('updates');
 
@@ -101,7 +95,7 @@ export default function Feed() {
       .catch(() => setPublishedBrief(null));
   }, [primaryNetwork.cityPreset]);
 
-  const { posts, fetchNextPage, hasNextPage, isLoading, isError, refetch } = useFeedData();
+  const { posts, isLoading, isError, refetch } = useFeedData();
   const { isRefreshing, pullDistance } = usePullToRefresh(refetch);
   const { data: briefPreferences = null, isFetched: briefPreferencesFetched } = useQuery({
     queryKey: feedPreferenceKeys.user(currentUser?.id),
@@ -152,9 +146,7 @@ export default function Feed() {
       return;
     }
     if (!userCommunitiesList) {
-      if (!appParams.hasBackendConfig) {
-        setCommunityGroups([{ id: 'demo-community', name: 'Five Towns', type: 'Neighborhood' }]);
-      }
+      setCommunityGroups([]);
       return;
     }
     setCommunityGroups(userCommunitiesList.filter(c => c));
@@ -279,8 +271,6 @@ export default function Feed() {
     await handlePreferenceSetupSave(patch);
   }, [handlePreferenceSetupSave]);
 
-  const feedCanRender = !isLoading || loadTimedOut;
-
   const FEED_TTL = 14 * 24 * 3_600_000; // posts older than 14 days are hidden from feed
   const visiblePosts = posts.filter(p => {
     if (p.type === 'dating') return false;
@@ -373,17 +363,6 @@ export default function Feed() {
     });
   }, [briefPreferences?.interests, briefSignalEvents, curatedItems, feedPosts, primaryNetwork]);
 
-  const homePriorityModel = useMemo(() => buildHomePriorityModel({
-    items: rankedBriefItems,
-    selectedCategoryIds: briefPreferences?.interests || DEFAULT_BRIEF_CATEGORY_IDS,
-    events: briefSignalEvents,
-    primaryNetwork,
-    currentUserId: currentUser?.id,
-    engagementLevel: briefPreferences?.engagement_level || 'balanced',
-    blockedUserIds: blockedIds,
-    preferences: briefPreferences,
-  }), [blockedIds, briefPreferences, briefSignalEvents, currentUser?.id, primaryNetwork, rankedBriefItems]);
-
   const { isBriefOpen, categoryId } = readBriefRouteState(searchParams);
   const selectedBriefCategory = getBriefCategory(categoryId);
 
@@ -433,20 +412,6 @@ export default function Feed() {
     if (action.destination) navigate(action.destination);
   }, [navigate, openComposer]);
 
-  const handleShowLess = useCallback((post) => {
-    setHiddenPostIds((current) => current.includes(post.id) ? current : [...current, post.id]);
-    toast.message('You’ll see fewer posts like this.');
-    if (!currentUser?.id) return;
-    feedRetentionService.recordEvent({
-      userId: currentUser.id,
-      post,
-      eventType: 'show_less',
-      metadata: { category_id: classifyBriefCategory(post), source: 'feed' },
-    }).catch(() => {}).finally(() => queryClient.invalidateQueries({
-      queryKey: feedPreferenceKeys.signals(currentUser.id),
-    }));
-  }, [currentUser?.id, queryClient]);
-
   const handleCardReply = useCallback((post) => {
     recordInterest(post);
     if (currentUser?.id) {
@@ -494,14 +459,6 @@ export default function Feed() {
     });
   }, [navigate, openComposer, recordInterest]);
 
-  const handlePriorityOpen = useCallback((item) => {
-    if (item.provenance === 'editor' && !item.post_id) {
-      handleOpenBriefCategory(item.category_id);
-      return;
-    }
-    handleCardOpen(item);
-  }, [handleCardOpen, handleOpenBriefCategory]);
-
   const shouldShowPreferenceSetup = Boolean(
     currentUser?.id
     && appParams.hasBackendConfig
@@ -531,7 +488,7 @@ export default function Feed() {
         </div>
       )}
 
-      <DestinationHeader
+      {(isBriefOpen || feedTab !== 'general') && <DestinationHeader
         leading={(
           <FeedFilterTrigger
             primaryNetwork={primaryNetwork}
@@ -556,7 +513,7 @@ export default function Feed() {
             <NotificationBell userId={currentUser?.id} />
           </>
         )}
-      />
+      />}
 
       <FeedFilters
         isOpen={showLocationPicker}
@@ -569,16 +526,7 @@ export default function Feed() {
 
 
       {feedTab === 'general' ? (
-        <div className="mobile-page mobile-safe-bottom min-h-screen space-y-2.5 bg-[#F0EEE8] px-3 pt-3">
-          {/* One-time network banner */}
-          {showNetworkBanner && (
-            <div className="graphic-stripes flex items-center gap-2 rounded-[22px] bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 px-4 py-3 text-white text-[12px] font-medium shadow-[0_14px_30px_rgba(37,99,235,0.18)]">
-              <span className="text-lg">{primaryNetwork.emoji}</span>
-              <span className="flex-1">You're viewing <strong>{primaryNetwork.shortLabel}</strong> — tap the chip above to switch networks.</span>
-              <button onClick={() => { setShowNetworkBanner(false); storageService.setItem('junited_network_banner_v2_dismissed', '1'); }} className="text-white/70 hover:text-white text-lg leading-none font-bold flex-shrink-0">×</button>
-            </div>
-          )}
-
+        <div className={isBriefOpen ? 'mobile-page mobile-safe-bottom min-h-screen space-y-2.5 bg-[#F0EEE8] px-3 pt-3' : 'min-h-screen bg-[#F5F7FB]'}>
           {isBriefOpen ? (
             <WidgetBoundary>
               {selectedBriefCategory ? (
@@ -600,101 +548,22 @@ export default function Feed() {
               )}
             </WidgetBoundary>
           ) : (
-            <>
-              {COMMUNITIES_ENABLED && appParams.hasBackendConfig && communitiesFetched && communityGroups.length === 0 && (
-                <div className="rounded-2xl border border-blue-100 bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.07)]">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white">
-                      <Users className="h-5 w-5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[15px] font-black text-slate-900">Join your first community</p>
-                      <p className="mt-0.5 text-[13px] leading-snug text-slate-500">Your feed gets better once you follow a shul, neighborhood, chesed group, or local community.</p>
-                      <button
-                        onClick={() => navigate('/Communities')}
-                        className="mt-3 inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-blue-600 px-4 text-[13px] font-bold text-white transition-transform active:scale-95"
-                      >
-                        Find communities <ArrowRight className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <WidgetBoundary>
-                <HomePriorityStack
-                  items={homePriorityModel.priorities}
-                  networkLabel={primaryNetwork.shortLabel || primaryNetwork.cityPreset || 'Your community'}
-                  engagementLevel={briefPreferences?.engagement_level || 'balanced'}
-                  onOpenItem={handlePriorityOpen}
-                  onOpenEngagement={() => navigate('/Settings')}
-                />
-              </WidgetBoundary>
-
-              <WidgetBoundary>
-                <LiveCategoryDeck
-                  leads={homePriorityModel.categoryLeads}
-                  onOpenCategory={handleOpenBriefCategory}
-                  onSeeAll={handleOpenBrief}
-                />
-              </WidgetBoundary>
-
-              {(isLoading || isError || feedPosts.length > 0) && (
-              <section aria-labelledby="from-your-community-heading" className="space-y-2.5">
-                <div className="flex items-end justify-between px-1 pt-1">
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#315B8A]">Live and local</p>
-                    <h2 id="from-your-community-heading" className="mt-0.5 text-[17px] font-black tracking-[-0.02em] text-[#0F1C2E]">
-                      From your community
-                    </h2>
-                  </div>
-                </div>
-
-                {isLoading && !loadTimedOut && (
-                  <div className="motion-stagger space-y-2.5 tab-fade-in">
-                    {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
-                  </div>
-                )}
-
-                {isError && !isLoading && feedPosts.length === 0 && (
-                  <QueryError message="The feed could not load." onRetry={refetch} />
-                )}
-
-                {feedCanRender && feedPosts.length > 0 && (
-                  <div className="motion-stagger tab-fade-in space-y-2.5">
-                    {isError && (
-                      <p className="px-4 py-2 text-center text-[12px] text-slate-400">Showing cached posts — pull down to refresh.</p>
-                    )}
-                    {feedPosts.map((post) => (
-                      <UnifiedPostCard
-                        variant="compact"
-                        key={post.id}
-                        post={post}
-                        currentUser={currentUser}
-                        liked={userLikes.includes(post.id)}
-                        onLike={handleLike}
-                        onReply={handleCardReply}
-                        onOpen={handleCardOpen}
-                        onShowLess={handleShowLess}
-                        onMap={() => navigate('/Map')}
-                      />
-                    ))}
-                    {hasNextPage && (
-                      <div className="pb-4 text-center">
-                        <button
-                          onClick={() => fetchNextPage()}
-                          disabled={isLoading}
-                          className="motion-press min-h-11 rounded-full bg-white px-6 text-[13px] font-semibold text-slate-700 shadow-sm disabled:opacity-50"
-                        >
-                          {isLoading ? 'Loading…' : 'Load more posts'}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </section>
-              )}
-            </>
+            <FiveTownsHomeDashboard
+              currentUser={currentUser}
+              posts={rankedBriefItems}
+              communityGroups={communityGroups}
+              isLoading={isLoading && !loadTimedOut}
+              isError={isError}
+              onRetry={refetch}
+              onOpenPost={handleCardOpen}
+              onOpenLocation={() => setShowLocationPicker(true)}
+              onNavigate={navigate}
+              onPublish={() => openComposer({ type: 'feed' })}
+              onOpenCalendar={() => setShowCalendarSheet(true)}
+              onOpenMessages={() => navigate('/Messages')}
+              onOpenNotifications={() => navigate('/Notifications')}
+              onReportCorrection={() => toast.message('Use Send feedback in Me to report a directory correction.')}
+            />
           )}
         </div>
       ) : (
