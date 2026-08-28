@@ -30,7 +30,8 @@ describe('iPhone app shell contract', () => {
   });
 
   it('keeps the real help request flow available after removing the duplicate Home action', () => {
-    expect(feedSource).toContain('<LiveCategoryDeck');
+    expect(feedSource).toContain('<FiveTownsHomeDashboard');
+    expect(feedSource).toContain("navigate('/MitzvahCircle')");
     expect(feedSource).not.toContain('<HomeStartHere');
     expect(helpSource).toContain("searchParams.get('action') !== 'request'");
     expect(helpSource).toContain("next.delete('action')");
