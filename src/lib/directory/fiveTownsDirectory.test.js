@@ -92,6 +92,14 @@ describe('Five Towns directory', () => {
     ).toBe(true);
   });
 
+  it('gives every restaurant a named, clickable kosher source', () => {
+    const restaurants = FIVE_TOWNS_LISTINGS.filter((listing) => listing.categoryId === 'restaurants');
+
+    expect(restaurants).toHaveLength(34);
+    expect(restaurants.every((listing) => canShowKosherVerification(listing))).toBe(true);
+    expect(restaurants.every((listing) => Boolean(listing.kosherCertifier))).toBe(true);
+  });
+
   it('builds all three map links for a public physical address', () => {
     const links = directoryMapLinks({
       name: 'Test',

@@ -3,6 +3,7 @@ import {
   FIVE_TOWNS_ADDITIONAL_LISTINGS,
   FIVE_TOWNS_DIRECTORY_ENRICHMENT,
 } from '@/data/fiveTownsDirectoryEnrichment';
+import { FIVE_TOWNS_KOSHER_SOURCES } from '@/data/fiveTownsKosherSources';
 
 export const DIRECTORY_GROUPS = [
   {
@@ -212,6 +213,7 @@ export function normalizeDirectoryListing(record) {
 const enrichedDirectoryData = directoryData.map((record) => ({
   ...record,
   ...(FIVE_TOWNS_DIRECTORY_ENRICHMENT[record.id] || {}),
+  ...(FIVE_TOWNS_KOSHER_SOURCES[record.id] || {}),
 }));
 
 export const FIVE_TOWNS_LISTINGS = [
