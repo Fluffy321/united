@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { existsSync, readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import {
   DIRECTORY_INTENTS,
   DIRECTORY_GROUPS,
@@ -12,6 +14,17 @@ import {
 } from './fiveTownsDirectory';
 
 describe('Five Towns directory', () => {
+  it('keeps the protected photo catalog synchronized with every listing', () => {
+    const catalogUrl = new URL('../../../supabase/functions/_shared/fiveTownsDirectoryPhotoCatalog.json', import.meta.url);
+    const catalogPath = fileURLToPath(catalogUrl);
+
+    expect(existsSync(catalogPath)).toBe(true);
+
+    const catalog = JSON.parse(readFileSync(catalogPath, 'utf8'));
+    expect(Object.keys(catalog).sort()).toEqual(FIVE_TOWNS_LISTINGS.map((listing) => listing.id).sort());
+    expect(Object.values(catalog).every((listing) => listing.name && listing.address)).toBe(true);
+  });
+
   it('exposes the eight approved groups with populated subcategories', () => {
     expect(DIRECTORY_GROUPS).toHaveLength(8);
     expect(DIRECTORY_GROUPS.map((group) => group.id)).toEqual([
