@@ -126,7 +126,7 @@ git commit -m "feat: bring the Five Towns directory to life"
 
 - [ ] **Step 1: Write failing group-view tests**
 
-Render with `initialGroupId="food"` and assert `Good for dinner`, `Quick and casual`, `Shabbat shopping`, subcategory chips, town filtering copy, `Google`, `Apple`, `Waze`, `Source`, and `Report a correction` remain present.
+Render with `initialGroupId="food"` and assert `Good for dinner`, `Coffee and a seat`, `Shabbat shopping`, subcategory chips, town filtering copy, `Google`, `Apple`, `Waze`, `Source`, and `Report a correction` remain present.
 
 - [ ] **Step 2: Run the component test and confirm failure**
 
@@ -180,4 +180,3 @@ At a 390 × 844 viewport, open `/Feed`, confirm the dashboard layout is unchange
 git add src/lib/directory src/components/home
 git commit -m "fix: finish iPhone directory verification"
 ```
-

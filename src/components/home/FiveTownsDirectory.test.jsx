@@ -8,7 +8,13 @@ describe('FiveTownsDirectory', () => {
   it('renders all eight groups and useful search language', () => {
     const html = renderToStaticMarkup(<FiveTownsDirectory />);
     expect(html).toContain('Search the Five Towns');
+    expect(html).toContain('Dinner tonight');
+    expect(html).toContain('Kids');
+    expect(html).toContain('Coffee');
+    expect(html).toContain('Shabbat shopping');
+    expect(html).toContain('Good starting points');
     expect(html).toContain('Jewish life');
+    expect(html).toContain('Shuls, minyanim, mikvahs, eruvs, and learning');
     expect(html).toContain('Food');
     expect(html).toContain('Family');
     expect(html).toContain('Shopping');
@@ -16,6 +22,8 @@ describe('FiveTownsDirectory', () => {
     expect(html).toContain('Services');
     expect(html).toContain('Community');
     expect(html).toContain('Things to do');
+    expect(html).toContain('sourced places');
+    expect(html).not.toContain('verified options');
   });
 
   it('shows honest sourcing and correction controls', () => {
@@ -27,6 +35,22 @@ describe('FiveTownsDirectory', () => {
     expect(html).toContain('Waze');
     expect(html).toContain('Verified kosher');
     expect(html).not.toContain('data-kosher-unverified="true"');
+  });
+
+  it('adds useful sourced discovery to a category without removing filters or actions', () => {
+    const html = renderToStaticMarkup(<FiveTownsDirectory initialGroupId="food" />);
+    expect(html).toContain('Good for dinner');
+    expect(html).toContain('Coffee and a seat');
+    expect(html).toContain('Shabbat shopping');
+    expect(html).toContain('Restaurants');
+    expect(html).toContain('Bakeries');
+    expect(html).toContain('Groceries');
+    expect(html).toContain('All towns');
+    expect(html).toContain('Google');
+    expect(html).toContain('Apple');
+    expect(html).toContain('Waze');
+    expect(html).toContain('Source');
+    expect(html).toContain('Report a correction');
   });
 
   it('shows official-photo and Why go details when a listing has them', () => {

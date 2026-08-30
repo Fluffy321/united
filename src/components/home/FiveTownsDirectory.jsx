@@ -13,10 +13,15 @@ import {
   X,
 } from 'lucide-react';
 import DirectoryListingCard from './DirectoryListingCard';
+import DirectoryFeaturedRail from './DirectoryFeaturedRail';
+import DirectoryIntentRail from './DirectoryIntentRail';
 import {
+  DIRECTORY_INTENTS,
   DIRECTORY_GROUPS,
   FIVE_TOWNS_LISTINGS,
+  featuredDirectoryListings,
   filterDirectoryListings,
+  filterListingsByIntent,
   getDirectoryGroup,
 } from '@/lib/directory/fiveTownsDirectory';
 
@@ -42,6 +47,31 @@ const GROUP_TONES = {
   'things-to-do': 'bg-[#FFF3E8] text-[#A04F18]',
 };
 
+const GROUP_SURFACES = {
+  'jewish-life': 'border-indigo-200 bg-indigo-50/90',
+  food: 'border-amber-200 bg-amber-50/90',
+  family: 'border-sky-200 bg-sky-50/90',
+  shopping: 'border-pink-200 bg-pink-50/90',
+  health: 'border-emerald-200 bg-emerald-50/90',
+  services: 'border-slate-200 bg-slate-100/90',
+  community: 'border-violet-200 bg-violet-50/90',
+  'things-to-do': 'border-orange-200 bg-orange-50/90',
+};
+
+const GROUP_INTENT_PRESENTATION = {
+  food: [
+    ['dinner-tonight', 'Good for dinner'],
+    ['coffee', 'Coffee and a seat'],
+    ['shabbat-shopping', 'Shabbat shopping'],
+  ],
+  family: [['kids', 'Out with the kids']],
+  shopping: [
+    ['shabbat-shopping', 'Shabbat shopping'],
+    ['coffee', 'Coffee and a seat'],
+  ],
+  'things-to-do': [['kids', 'Out with the kids']],
+};
+
 export default function FiveTownsDirectory({
   initialGroupId = '',
   initialListingId = '',
@@ -53,22 +83,50 @@ export default function FiveTownsDirectory({
   const [categoryId, setCategoryId] = useState('');
   const [town, setTown] = useState('');
   const [query, setQuery] = useState('');
+  const [activeIntentId, setActiveIntentId] = useState('');
   const [selectedListing, setSelectedListing] = useState(initialListing);
   const activeGroup = getDirectoryGroup(groupId);
 
-  const results = useMemo(
-    () => filterDirectoryListings(FIVE_TOWNS_LISTINGS, {
+  const results = useMemo(() => {
+    const intentListings = filterListingsByIntent(FIVE_TOWNS_LISTINGS, activeIntentId);
+    return filterDirectoryListings(intentListings, {
       groupId,
       categoryId,
       town,
       query,
-    }),
-    [categoryId, groupId, query, town],
-  );
+    });
+  }, [activeIntentId, categoryId, groupId, query, town]);
+
+  const rootFeaturedListings = useMemo(() => featuredDirectoryListings(FIVE_TOWNS_LISTINGS, { limit: 100 })
+    .sort((left, right) => Number(Boolean(right.imageUrl)) - Number(Boolean(left.imageUrl)))
+    .slice(0, 8), []);
+
+  const groupFeaturedListings = useMemo(() => (groupId
+    ? featuredDirectoryListings(FIVE_TOWNS_LISTINGS, { groupId, limit: 100 })
+      .sort((left, right) => Number(Boolean(right.imageUrl)) - Number(Boolean(left.imageUrl)))
+      .slice(0, 8)
+    : []), [groupId]);
+
+  const groupIntents = useMemo(() => (GROUP_INTENT_PRESENTATION[groupId] || [])
+    .map(([intentId, label]) => {
+      const intent = DIRECTORY_INTENTS.find((item) => item.id === intentId);
+      return intent ? { ...intent, label } : null;
+    })
+    .filter(Boolean), [groupId]);
 
   const openGroup = (nextGroupId) => {
     setGroupId(nextGroupId);
     setCategoryId('');
+    setQuery('');
+    setActiveIntentId('');
+    setSelectedListing(null);
+  };
+
+  const openIntent = (intentId) => {
+    setActiveIntentId(intentId);
+    setGroupId('');
+    setCategoryId('');
+    setTown('');
     setQuery('');
     setSelectedListing(null);
   };
@@ -83,6 +141,11 @@ export default function FiveTownsDirectory({
       setCategoryId('');
       setTown('');
       setQuery('');
+      setActiveIntentId('');
+      return;
+    }
+    if (activeIntentId) {
+      setActiveIntentId('');
       return;
     }
     onClose?.();
@@ -152,14 +215,19 @@ export default function FiveTownsDirectory({
               </p>
             </div>
           </div>
-        ) : !groupId && !query ? (
+        ) : !groupId && !query && !activeIntentId ? (
           <>
-            <div className="mb-4 px-1">
+            <div className="mb-3 px-1">
               <p className="text-[13px] font-semibold leading-relaxed text-slate-500">
-                Real places and services with visible sources. Pick a section or search everything.
+                Start with what you need, or browse every sourced place below.
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-2.5">
+            <DirectoryIntentRail
+              intents={DIRECTORY_INTENTS}
+              activeIntentId={activeIntentId}
+              onSelect={openIntent}
+            />
+            <div className="mt-4 grid grid-cols-2 gap-2.5">
               {DIRECTORY_GROUPS.map((group) => {
                 const Icon = GROUP_ICONS[group.id];
                 const count = FIVE_TOWNS_LISTINGS.filter((item) => item.groupId === group.id).length;
@@ -168,27 +236,49 @@ export default function FiveTownsDirectory({
                     type="button"
                     key={group.id}
                     onClick={() => openGroup(group.id)}
-                    className="min-h-[144px] rounded-[24px] border border-slate-200/90 bg-white p-4 text-left shadow-[0_8px_24px_rgba(15,28,46,0.05)] active:scale-[0.98]"
+                    className={`min-h-[148px] rounded-[24px] border p-4 text-left shadow-[0_8px_24px_rgba(15,28,46,0.045)] active:scale-[0.98] ${GROUP_SURFACES[group.id]}`}
                   >
                     <span className={`flex h-10 w-10 items-center justify-center rounded-2xl ${GROUP_TONES[group.id]}`}>
                       <Icon className="h-5 w-5" />
                     </span>
                     <span className="mt-4 block text-[15px] font-black tracking-[-0.02em]">{group.label}</span>
-                    <span className="mt-1 block text-[11px] font-semibold leading-snug text-slate-500">{count} verified options</span>
+                    <span className="mt-1 block text-[10px] font-semibold leading-snug text-slate-600">{group.description}</span>
+                    <span className="mt-2 block text-[9px] font-black uppercase tracking-[0.08em] text-slate-500">{count} sourced places</span>
                   </button>
                 );
               })}
             </div>
+            <DirectoryFeaturedRail
+              listings={rootFeaturedListings}
+              onOpen={setSelectedListing}
+            />
           </>
         ) : (
           <>
             {activeGroup && (
               <div className="mb-4">
                 <p className="px-1 text-[12px] font-semibold leading-relaxed text-slate-500">{activeGroup.description}</p>
+                {groupIntents.length > 0 && (
+                  <div className="mt-3">
+                    <DirectoryIntentRail
+                      intents={groupIntents}
+                      activeIntentId={activeIntentId}
+                      onSelect={setActiveIntentId}
+                    />
+                  </div>
+                )}
+                <DirectoryFeaturedRail
+                  title={`${activeGroup.label} worth knowing`}
+                  listings={groupFeaturedListings}
+                  onOpen={setSelectedListing}
+                />
                 <div className="-mx-4 mt-3 flex gap-2 overflow-x-auto px-4 pb-1">
                   <button
                     type="button"
-                    onClick={() => setCategoryId('')}
+                    onClick={() => {
+                      setCategoryId('');
+                      setActiveIntentId('');
+                    }}
                     className={`min-h-10 shrink-0 rounded-full border px-4 text-[11px] font-black ${categoryId ? 'border-slate-200 bg-white text-slate-600' : 'border-[#2456D8] bg-[#2456D8] text-white'}`}
                   >
                     All
@@ -197,7 +287,10 @@ export default function FiveTownsDirectory({
                     <button
                       type="button"
                       key={category.id}
-                      onClick={() => setCategoryId(category.id)}
+                      onClick={() => {
+                        setCategoryId(category.id);
+                        setActiveIntentId('');
+                      }}
                       className={`min-h-10 shrink-0 rounded-full border px-4 text-[11px] font-black ${categoryId === category.id ? 'border-[#2456D8] bg-[#2456D8] text-white' : 'border-slate-200 bg-white text-slate-600'}`}
                     >
                       {category.label}
