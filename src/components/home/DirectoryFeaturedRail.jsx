@@ -5,7 +5,7 @@ import DirectoryPhotoMedia from './DirectoryPhotoMedia';
 function FeaturedDirectoryCard({ listing, onOpen }) {
   return (
     <article className="w-[164px] shrink-0 snap-start overflow-hidden rounded-[20px] border border-slate-200/90 bg-white text-left shadow-[0_9px_24px_rgba(15,28,46,0.06)]">
-      <DirectoryPhotoMedia listing={listing} className="h-[92px] w-full" />
+      <DirectoryPhotoMedia listing={listing} className="h-[92px] w-full" compact />
       <button type="button" onClick={() => onOpen?.(listing)} className="block w-full p-3 text-left active:bg-slate-50">
         <strong className="line-clamp-2 block text-[12px] font-black leading-tight tracking-[-0.015em] text-slate-900">
           {listing.name}

@@ -45,6 +45,7 @@ export function DirectoryPhotoMediaView({
   className = 'aspect-[4/3]',
   fallbackClassName = '',
   eager = false,
+  compact = false,
 }) {
   const [failedKinds, setFailedKinds] = useState(() => new Set());
   useEffect(() => setFailedKinds(new Set()), [listing?.id, runtimePhoto?.imageUrl]);
@@ -81,20 +82,21 @@ export function DirectoryPhotoMediaView({
           href={photo.sourceUrl}
           target="_blank"
           rel="noreferrer"
+          aria-label={`Official photo · ${photo.sourceLabel}`}
           className="absolute bottom-1.5 right-1.5 z-10 rounded-full bg-black/65 px-2 py-1 text-[8px] font-bold text-white backdrop-blur"
         >
-          Official photo · {photo.sourceLabel}
+          {compact ? 'Official' : `Official photo · ${photo.sourceLabel}`}
         </a>
       )}
       {photo?.kind === 'google' && (
         <div className="absolute bottom-1.5 right-1.5 z-10 flex max-w-[calc(100%-12px)] items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-[8px] font-bold text-white backdrop-blur">
           {photo.authorUri ? (
-            <a href={photo.authorUri} target="_blank" rel="noreferrer" className="truncate">Photo by {photo.authorName || 'Google user'}</a>
+            <a href={photo.authorUri} target="_blank" rel="noreferrer" aria-label={`Photo by ${photo.authorName || 'Google user'}`} className="truncate">{compact ? 'Google' : `Photo by ${photo.authorName || 'Google user'}`}</a>
           ) : (
             <span className="truncate">Photo via Google</span>
           )}
-          <span aria-hidden="true">·</span>
-          <a href={photo.sourceUrl} target="_blank" rel="noreferrer" className="shrink-0">Google Maps</a>
+          {!compact && <span aria-hidden="true">·</span>}
+          <a href={photo.sourceUrl} target="_blank" rel="noreferrer" aria-label="Open photo source in Google Maps" className="shrink-0">{compact ? '↗' : 'Google Maps'}</a>
         </div>
       )}
     </div>

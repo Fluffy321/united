@@ -16,6 +16,7 @@ export default function DirectoryListingCard({ listing, onOpen, onReportCorrecti
         <DirectoryPhotoMedia
           listing={listing}
           className="h-[72px] w-[72px] shrink-0 rounded-2xl"
+          compact
         />
         <button type="button" onClick={() => onOpen?.(listing)} className="min-w-0 flex-1 text-left">
           <span className="flex items-start gap-2">
