@@ -135,6 +135,13 @@ export function normalizeDirectoryListing(record) {
   const groupId = record.group_id || legacyGroupId;
   const categoryId = record.category_id || legacyCategoryId;
   const certifiedByVaad = /vaadhakashrus\.org/i.test(record.kosher_source_url || record.source_url || '');
+  const imageSourceUrl = isHttpUrl(record.image_source_url) ? record.image_source_url : '';
+  const imageUrl = imageSourceUrl && isHttpUrl(record.image_url) ? record.image_url : '';
+  const tags = Array.from(new Set(
+    (Array.isArray(record.tags) ? record.tags : [])
+      .map((tag) => String(tag || '').trim())
+      .filter(Boolean),
+  ));
 
   return {
     id: String(record.id),
@@ -150,6 +157,12 @@ export function normalizeDirectoryListing(record) {
     website: record.website || record.source_url || '',
     sourceUrl: record.source_url || '',
     sourceLabel: record.verification || 'Public source',
+    imageUrl,
+    imageSourceUrl,
+    imageSourceLabel: imageUrl ? record.image_source_label || 'Official photo source' : '',
+    whyGo: String(record.why_go || '').trim(),
+    tags,
+    featured: Boolean(record.featured),
     kosher: Boolean(record.kosher || certifiedByVaad),
     kosherCertifier: record.kosher_certifier || (certifiedByVaad ? 'Five Towns & Far Rockaway Vaad Hakashrus' : ''),
     kosherSourceUrl: record.kosher_source_url || (certifiedByVaad ? record.source_url : ''),
@@ -158,6 +171,13 @@ export function normalizeDirectoryListing(record) {
 }
 
 export const FIVE_TOWNS_LISTINGS = directoryData.map(normalizeDirectoryListing);
+
+export function featuredDirectoryListings(listings, { groupId, limit = 12 } = {}) {
+  return listings
+    .filter((listing) => listing.featured && listing.sourceUrl)
+    .filter((listing) => !groupId || listing.groupId === groupId)
+    .slice(0, limit);
+}
 
 export function canShowKosherVerification(listing) {
   return Boolean(listing?.kosher && isHttpUrl(listing?.kosherSourceUrl));

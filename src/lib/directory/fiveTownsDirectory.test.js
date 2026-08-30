@@ -4,7 +4,9 @@ import {
   FIVE_TOWNS_LISTINGS,
   canShowKosherVerification,
   directoryMapLinks,
+  featuredDirectoryListings,
   filterDirectoryListings,
+  normalizeDirectoryListing,
 } from './fiveTownsDirectory';
 
 describe('Five Towns directory', () => {
@@ -97,5 +99,56 @@ describe('Five Towns directory', () => {
       query: 'pizza',
     });
     expect(results.map((item) => item.id)).toEqual(['pizza']);
+  });
+
+  it('normalizes trusted photo and editorial metadata', () => {
+    const listing = normalizeDirectoryListing({
+      id: 'grant-park',
+      title: 'Grant Park',
+      type: 'services',
+      group_id: 'things-to-do',
+      category_id: 'recreation',
+      source_url: 'https://www.nassaucountyny.gov/2799/Grant-Park',
+      image_url: 'https://www.nassaucountyny.gov/ImageRepository/Document?documentId=5199',
+      image_source_url: 'https://www.nassaucountyny.gov/2799/Grant-Park',
+      image_source_label: 'Nassau County Parks',
+      why_go: 'Playgrounds, courts, walking paths, fishing, and a seasonal spray area.',
+      tags: ['Kids', 'Free', 'Kids', ''],
+      featured: true,
+      last_checked: '2026-08-28',
+    });
+
+    expect(listing).toMatchObject({
+      imageUrl: 'https://www.nassaucountyny.gov/ImageRepository/Document?documentId=5199',
+      imageSourceUrl: 'https://www.nassaucountyny.gov/2799/Grant-Park',
+      imageSourceLabel: 'Nassau County Parks',
+      whyGo: 'Playgrounds, courts, walking paths, fishing, and a seasonal spray area.',
+      tags: ['Kids', 'Free'],
+      featured: true,
+      lastChecked: '2026-08-28',
+    });
+  });
+
+  it('does not expose an image without a traceable image source', () => {
+    const listing = normalizeDirectoryListing({
+      id: 'unsafe-photo',
+      title: 'Unsafe',
+      type: 'services',
+      source_url: 'https://example.com/place',
+      image_url: 'https://example.com/photo.jpg',
+    });
+
+    expect(listing.imageUrl).toBe('');
+    expect(listing.imageSourceUrl).toBe('');
+  });
+
+  it('selects only sourced records marked for featured discovery', () => {
+    const listings = [
+      { id: 'featured', featured: true, sourceUrl: 'https://example.com/featured' },
+      { id: 'ordinary', featured: false, sourceUrl: 'https://example.com/ordinary' },
+      { id: 'unsourced', featured: true, sourceUrl: '' },
+    ];
+
+    expect(featuredDirectoryListings(listings).map((listing) => listing.id)).toEqual(['featured']);
   });
 });
