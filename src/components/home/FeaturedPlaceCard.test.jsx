@@ -39,7 +39,7 @@ describe('Five Towns photo cards', () => {
         tags: ['Minyan'],
       }} />,
     );
-    expect(html).toContain('Photo coming from an official source');
+    expect(html).toContain('Explore Local shul');
   });
 
   it('renders need-based nearby discovery language', () => {
