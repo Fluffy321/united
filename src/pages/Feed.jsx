@@ -24,6 +24,7 @@ import BriefCategorySection from '@/components/feed/BriefCategorySection';
 import WidgetBoundary from '@/components/feed/WidgetBoundary';
 import FeedPreferenceSetup from '@/components/feed/FeedPreferenceSetup';
 import { usePullToRefresh } from '@/lib/usePullToRefresh';
+import useFiveTownsDaily from '@/hooks/useFiveTownsDaily';
 
 import { filterBlock, filterUserCommunity, getCommunity, getUnifiedPost } from '@/services/entityServices';
 import { FEED_LOAD_TIMEOUT_MS, feedText, getPostLivePriority } from '@/lib/feed/feedRanking';
@@ -91,6 +92,7 @@ export default function Feed() {
   }, [primaryNetwork.cityPreset]);
 
   const { posts, isLoading, isError, refetch } = useFeedData();
+  const dailyInfo = useFiveTownsDaily();
   const { isRefreshing, pullDistance } = usePullToRefresh(refetch);
   const { data: briefPreferences = null, isFetched: briefPreferencesFetched } = useQuery({
     queryKey: feedPreferenceKeys.user(currentUser?.id),
@@ -513,6 +515,7 @@ export default function Feed() {
               onOpenMessages={() => navigate('/Messages')}
               onOpenNotifications={() => navigate('/Notifications')}
               onReportCorrection={() => toast.message('Use Send feedback in Me to report a directory correction.')}
+              dailyInfo={dailyInfo}
             />
           )}
         </div>

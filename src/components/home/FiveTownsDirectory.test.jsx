@@ -48,4 +48,11 @@ describe('FiveTownsDirectory', () => {
     expect(html).toContain('Why go');
     expect(html).toContain('Official photo');
   });
+
+  it('can open directly to a selected sourced listing', () => {
+    const html = renderToStaticMarkup(<FiveTownsDirectory initialListingId="activity-grant-park" />);
+    expect(html).toContain('Grant Park');
+    expect(html).toContain('Playgrounds, courts, walking paths');
+    expect(html).toContain('Checked information');
+  });
 });

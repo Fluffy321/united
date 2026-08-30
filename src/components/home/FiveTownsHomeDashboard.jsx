@@ -22,7 +22,14 @@ import {
   Users,
 } from 'lucide-react';
 import FiveTownsDirectory from './FiveTownsDirectory';
-import { DIRECTORY_GROUPS, FIVE_TOWNS_LISTINGS } from '@/lib/directory/fiveTownsDirectory';
+import FiveTownsDailyPanel from './FiveTownsDailyPanel';
+import FeaturedPlaceCard from './FeaturedPlaceCard';
+import UsefulNearbyCard from './UsefulNearbyCard';
+import {
+  DIRECTORY_GROUPS,
+  FIVE_TOWNS_LISTINGS,
+  featuredDirectoryListings,
+} from '@/lib/directory/fiveTownsDirectory';
 import { feedText } from '@/lib/feed/feedRanking';
 
 const GROUP_ICONS = {
@@ -46,11 +53,6 @@ const GROUP_TONES = {
   community: 'bg-violet-50 text-violet-700',
   'things-to-do': 'bg-orange-50 text-orange-700',
 };
-
-function firstName(user) {
-  const name = user?.display_name || user?.full_name || user?.first_name || '';
-  return name.trim().split(/\s+/)[0] || '';
-}
 
 function initials(user) {
   const name = user?.display_name || user?.full_name || user?.first_name || 'J';
@@ -119,25 +121,67 @@ export default function FiveTownsHomeDashboard({
   onOpenMessages,
   onOpenNotifications,
   onReportCorrection,
+  dailyInfo = {},
 }) {
-  const [directoryGroupId, setDirectoryGroupId] = useState(null);
-  const name = firstName(currentUser);
+  const [directoryState, setDirectoryState] = useState(null);
 
   const counts = useMemo(() => DIRECTORY_GROUPS.reduce((result, group) => ({
     ...result,
     [group.id]: FIVE_TOWNS_LISTINGS.filter((listing) => listing.groupId === group.id).length,
   }), {}), []);
 
-  const featuredListings = useMemo(() => {
-    const preferredGroups = ['food', 'jewish-life', 'things-to-do', 'shopping'];
-    return preferredGroups
-      .map((groupId) => FIVE_TOWNS_LISTINGS.find((listing) => listing.groupId === groupId))
-      .filter(Boolean)
-      .slice(0, 2);
-  }, []);
+  const featuredListings = useMemo(() => featuredDirectoryListings(FIVE_TOWNS_LISTINGS, { limit: 100 })
+    .sort((left, right) => Number(Boolean(right.imageUrl)) - Number(Boolean(left.imageUrl)))
+    .slice(0, 8), []);
+
+  const usefulNearby = useMemo(() => [
+    {
+      title: 'Get the kids out',
+      detail: 'Parks, pools, activities, and family plans',
+      groupId: 'things-to-do',
+      tags: ['Kids', 'Pool', 'Sports', 'Outside'],
+      tone: 'from-cyan-600 to-blue-700',
+    },
+    {
+      title: 'Need a calm hour',
+      detail: 'Coffee, a walk, books, or somewhere quiet',
+      groupId: 'shopping',
+      tags: ['Coffee', 'Walk', 'Quiet', 'Books'],
+      tone: 'from-emerald-600 to-teal-800',
+    },
+    {
+      title: 'Make a full afternoon',
+      detail: 'Food plus something nearby to do',
+      groupId: 'things-to-do',
+      tags: ['Kids', 'Outside', 'Sit-down'],
+      tone: 'from-orange-500 to-rose-700',
+    },
+    {
+      title: 'Go out tonight',
+      detail: 'Dinner, dessert, and easy local options',
+      groupId: 'food',
+      tags: ['Dinner', 'Date night', 'Dessert'],
+      tone: 'from-violet-700 to-indigo-950',
+    },
+    {
+      title: 'Guests are visiting',
+      detail: 'Hosting, food, gifts, and local stops',
+      groupId: 'shopping',
+      tags: ['Shabbat', 'Prepared food', 'Gifts'],
+      tone: 'from-amber-500 to-orange-700',
+    },
+  ].map((need) => {
+    const matches = featuredDirectoryListings(FIVE_TOWNS_LISTINGS, { limit: 100 })
+      .filter((listing) => listing.groupId === need.groupId || listing.tags.some((tag) => need.tags.includes(tag)));
+    return {
+      ...need,
+      count: matches.length,
+      imageUrl: matches.find((listing) => listing.imageUrl)?.imageUrl || '',
+    };
+  }), []);
 
   const livePosts = posts.slice(0, 3);
-  const openDirectory = (groupId = '') => setDirectoryGroupId(groupId);
+  const openDirectory = (groupId = '', listingId = '') => setDirectoryState({ groupId, listingId });
   const navigate = (path) => onNavigate?.(path);
 
   return (
@@ -165,19 +209,11 @@ export default function FiveTownsHomeDashboard({
           <span className="text-[13px] font-semibold text-slate-400">Find food, shuls, schools, shops, anything</span>
         </button>
 
-        <section className="relative overflow-hidden rounded-[24px] bg-gradient-to-br from-[#0A1B3E] via-[#123778] to-[#2861E8] p-5 text-white shadow-[0_18px_40px_rgba(24,68,157,0.22)]">
-          <div className="absolute -right-10 -top-12 h-40 w-40 rounded-full bg-white/10" />
-          <div className="relative">
-            <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-[0.16em] text-blue-200"><span>Your Five Towns</span><span>Today</span></div>
-            <h1 className="mt-6 max-w-[280px] text-[25px] font-black leading-[1.02] tracking-[-0.055em]">Everything local, without the noise.</h1>
-            <p className="mt-2 max-w-[300px] text-[11px] font-semibold leading-relaxed text-blue-100">Jewish places, useful updates, plans, people, and help—organized around what you care about.</p>
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              {[[FIVE_TOWNS_LISTINGS.length, 'sourced listings'], ['5', 'local towns'], ['3', 'map choices']].map(([value, label]) => (
-                <div key={label} className="rounded-2xl border border-white/10 bg-white/10 p-2.5"><strong className="block text-[16px] font-black">{value}</strong><span className="mt-0.5 block text-[8px] font-bold text-blue-100">{label}</span></div>
-              ))}
-            </div>
-          </div>
-        </section>
+        <FiveTownsDailyPanel
+          weather={dailyInfo.weather}
+          jewishTimes={dailyInfo.jewishTimes}
+          traffic={dailyInfo.traffic}
+        />
 
         <section className="space-y-2.5">
           <SectionHeading title="Jewish directory" action="All listings" onAction={() => openDirectory('')} />
@@ -196,19 +232,20 @@ export default function FiveTownsHomeDashboard({
         </section>
 
         <section className="space-y-2.5">
-          <SectionHeading title={`Picked for ${name || 'you'}`} action="Adjust" onAction={() => navigate('/Settings')} />
-          <div className="grid grid-cols-2 gap-2.5">
+          <SectionHeading title="Nearby worth knowing" action="Open all places" onAction={() => openDirectory('')} />
+          <div className="-mx-3.5 flex snap-x gap-2.5 overflow-x-auto px-3.5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {featuredListings.map((listing) => (
-              <SmallCard key={listing.id} icon={listing.groupId === 'food' ? Utensils : Star} eyebrow={listing.town} title={listing.name} detail={listing.address} onClick={() => openDirectory(listing.groupId)} tone={GROUP_TONES[listing.groupId]} />
+              <div key={listing.id} className="snap-start"><FeaturedPlaceCard listing={listing} onOpen={() => openDirectory(listing.groupId, listing.id)} /></div>
             ))}
           </div>
         </section>
 
         <section className="space-y-2.5">
-          <SectionHeading title="Places worth knowing" action="Open all places" onAction={() => openDirectory('')} />
-          <div className="grid grid-cols-2 gap-2.5">
-            <SmallCard icon={Utensils} eyebrow="Food" title="Find somewhere kosher" detail={`${counts.food} sourced food options`} onClick={() => openDirectory('food')} tone={GROUP_TONES.food} />
-            <SmallCard icon={ShoppingBag} eyebrow="Local shops" title="Shop around the Five Towns" detail={`${counts.shopping} sourced places`} onClick={() => openDirectory('shopping')} tone={GROUP_TONES.shopping} />
+          <SectionHeading title="Useful nearby" action="See everything" onAction={() => openDirectory('')} />
+          <div className="-mx-3.5 flex snap-x gap-2.5 overflow-x-auto px-3.5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {usefulNearby.map((need) => (
+              <div key={need.title} className="snap-start"><UsefulNearbyCard {...need} onOpen={() => openDirectory(need.groupId)} /></div>
+            ))}
           </div>
         </section>
 
@@ -271,10 +308,11 @@ export default function FiveTownsHomeDashboard({
         </button>
       </div>
 
-      {directoryGroupId !== null && typeof document !== 'undefined' && createPortal(
+      {directoryState !== null && typeof document !== 'undefined' && createPortal(
         <FiveTownsDirectory
-          initialGroupId={directoryGroupId}
-          onClose={() => setDirectoryGroupId(null)}
+          initialGroupId={directoryState.groupId}
+          initialListingId={directoryState.listingId}
+          onClose={() => setDirectoryState(null)}
           onReportCorrection={onReportCorrection}
         />,
         document.body,

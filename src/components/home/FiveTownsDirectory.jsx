@@ -44,14 +44,16 @@ const GROUP_TONES = {
 
 export default function FiveTownsDirectory({
   initialGroupId = '',
+  initialListingId = '',
   onClose,
   onReportCorrection,
 }) {
-  const [groupId, setGroupId] = useState(initialGroupId);
+  const initialListing = FIVE_TOWNS_LISTINGS.find((listing) => listing.id === initialListingId) || null;
+  const [groupId, setGroupId] = useState(initialGroupId || initialListing?.groupId || '');
   const [categoryId, setCategoryId] = useState('');
   const [town, setTown] = useState('');
   const [query, setQuery] = useState('');
-  const [selectedListing, setSelectedListing] = useState(null);
+  const [selectedListing, setSelectedListing] = useState(initialListing);
   const activeGroup = getDirectoryGroup(groupId);
 
   const results = useMemo(
