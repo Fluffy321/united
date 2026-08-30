@@ -115,7 +115,7 @@ const LISTING_CATEGORY_OVERRIDES = {
   'service-achiezer': ['community', 'chesed'],
 };
 
-const TOWNS = ['Cedarhurst', 'Lawrence', 'Woodmere', 'Hewlett', 'Inwood', 'North Woodmere'];
+const TOWNS = ['North Woodmere', 'Cedarhurst', 'Lawrence', 'Woodmere', 'Hewlett', 'Inwood'];
 
 function isHttpUrl(value) {
   try {

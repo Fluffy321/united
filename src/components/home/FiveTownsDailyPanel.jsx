@@ -46,6 +46,15 @@ function TrafficRow({ traffic }) {
     );
   }
 
+  if (traffic?.status === 'loading') {
+    return (
+      <div className="flex min-h-[58px] items-center gap-3 rounded-[18px] border border-slate-200/90 bg-white px-3.5 py-2.5">
+        <span className="flex h-9 w-9 shrink-0 animate-pulse items-center justify-center rounded-xl bg-slate-100 text-slate-400"><Car className="h-[17px] w-[17px]" /></span>
+        <span><strong className="block text-[12px] font-black text-slate-900">Checking traffic</strong><span className="mt-0.5 block text-[9px] font-semibold text-slate-500">Looking for nearby 511NY incidents</span></span>
+      </div>
+    );
+  }
+
   const isVerifiedEmpty = traffic?.status === 'empty';
   return (
     <a href={traffic?.sourceUrl || 'https://511ny.org/'} target="_blank" rel="noreferrer" className="flex min-h-[58px] items-center gap-3 rounded-[18px] border border-slate-200/90 bg-white px-3.5 py-2.5 text-left">
@@ -57,6 +66,8 @@ function TrafficRow({ traffic }) {
 
 export default function FiveTownsDailyPanel({ weather, jewishTimes, traffic }) {
   const weatherReady = weather?.status === 'ready' && weather.data;
+  const weatherLoading = weather?.status === 'loading';
+  const timesLoading = jewishTimes?.status === 'loading';
   const times = jewishTimes?.data || {};
 
   return (
@@ -73,28 +84,28 @@ export default function FiveTownsDailyPanel({ weather, jewishTimes, traffic }) {
         <UtilityCell
           icon={CloudSun}
           label="Weather"
-          value={weatherReady ? `${weather.data.temperature}°` : 'Weather unavailable'}
-          detail={weatherReady ? weather.data.condition : 'Tap source to check'}
+          value={weatherReady ? `${weather.data.temperature}°` : weatherLoading ? 'Loading weather' : 'Weather unavailable'}
+          detail={weatherReady ? weather.data.condition : weatherLoading ? 'Getting local conditions' : 'Tap source to check'}
           tone="bg-sky-50 text-sky-700"
         />
         <UtilityCell
           icon={Flame}
           label="Candle lighting"
-          value={formatTime(times.candleLighting)}
+          value={timesLoading ? 'Checking times' : formatTime(times.candleLighting)}
           detail="This coming Shabbat"
           tone="bg-amber-50 text-amber-700"
         />
         <UtilityCell
           icon={Sunrise}
           label="Sunrise"
-          value={formatTime(times.sunrise)}
-          detail={`Sunset ${formatTime(times.sunset)}`}
+          value={timesLoading ? 'Checking times' : formatTime(times.sunrise)}
+          detail={timesLoading ? 'Getting local solar times' : `Sunset ${formatTime(times.sunset)}`}
           tone="bg-orange-50 text-orange-700"
         />
         <UtilityCell
           icon={MoonStar}
           label="Shabbat ends"
-          value={formatTime(times.havdalah)}
+          value={timesLoading ? 'Checking times' : formatTime(times.havdalah)}
           detail="Hebcal local calculation"
           tone="bg-indigo-50 text-indigo-700"
         />

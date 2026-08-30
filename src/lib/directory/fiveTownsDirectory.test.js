@@ -168,4 +168,17 @@ describe('Five Towns directory', () => {
         .every((groupId) => groups.has(groupId)),
     ).toBe(true);
   });
+
+  it('keeps North Woodmere distinct from Woodmere', () => {
+    const listing = normalizeDirectoryListing({
+      id: 'north-woodmere-park',
+      title: 'North Woodmere Park',
+      type: 'activity',
+      group_id: 'things-to-do',
+      category_id: 'recreation',
+      location_text: '750 Hungry Harbor Rd, North Woodmere, NY 11581',
+      source_url: 'https://example.gov/park',
+    });
+    expect(listing.town).toBe('North Woodmere');
+  });
 });

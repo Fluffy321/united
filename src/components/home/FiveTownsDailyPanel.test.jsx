@@ -68,4 +68,18 @@ describe('FiveTownsDailyPanel', () => {
     expect(html).toContain('Sunrise');
     expect(html).toContain('Candle lighting');
   });
+
+  it('labels provider loading without calling it unavailable', () => {
+    const html = renderToStaticMarkup(
+      <FiveTownsDailyPanel
+        weather={{ status: 'loading', data: null }}
+        jewishTimes={{ status: 'loading', data: null }}
+        traffic={{ status: 'loading', incidents: [], sourceUrl: 'https://511ny.org/' }}
+      />,
+    );
+    expect(html).toContain('Loading weather');
+    expect(html).toContain('Checking times');
+    expect(html).toContain('Checking traffic');
+    expect(html).not.toContain('Live traffic unavailable');
+  });
 });
