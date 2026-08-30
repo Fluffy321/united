@@ -2,6 +2,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import FiveTownsDirectory from './FiveTownsDirectory';
+import DirectoryListingCard from './DirectoryListingCard';
 
 describe('FiveTownsDirectory', () => {
   it('renders all eight groups and useful search language', () => {
@@ -26,5 +27,25 @@ describe('FiveTownsDirectory', () => {
     expect(html).toContain('Waze');
     expect(html).toContain('Verified kosher');
     expect(html).not.toContain('data-kosher-unverified="true"');
+  });
+
+  it('shows official-photo and Why go details when a listing has them', () => {
+    const html = renderToStaticMarkup(<DirectoryListingCard listing={{
+      id: 'grant-park',
+      name: 'Grant Park',
+      address: '1625 Broadway, Hewlett, NY 11557',
+      town: 'Hewlett',
+      sourceUrl: 'https://example.gov/park',
+      sourceLabel: 'County parks',
+      imageUrl: 'https://example.gov/park.jpg',
+      imageSourceUrl: 'https://example.gov/park',
+      imageSourceLabel: 'County parks',
+      whyGo: 'Playgrounds and paths close to home.',
+      tags: ['Kids', 'Free'],
+    }} />);
+
+    expect(html).toContain('Playgrounds and paths close to home.');
+    expect(html).toContain('Why go');
+    expect(html).toContain('Official photo');
   });
 });

@@ -1,5 +1,5 @@
-import React from 'react';
-import { CheckCircle2, ExternalLink, MapPin, Navigation, ShieldCheck } from 'lucide-react';
+import React, { useState } from 'react';
+import { CheckCircle2, ExternalLink, Image, Navigation, ShieldCheck } from 'lucide-react';
 import {
   canShowKosherVerification,
   directoryMapLinks,
@@ -8,13 +8,15 @@ import {
 export default function DirectoryListingCard({ listing, onOpen, onReportCorrection }) {
   const maps = directoryMapLinks(listing);
   const isKosherVerified = canShowKosherVerification(listing);
+  const [imageFailed, setImageFailed] = useState(false);
+  const showImage = Boolean(listing.imageUrl) && !imageFailed;
 
   return (
     <article className="rounded-[22px] border border-slate-200/90 bg-white p-4 shadow-[0_8px_26px_rgba(15,28,46,0.06)]">
       <button type="button" onClick={() => onOpen?.(listing)} className="w-full text-left">
         <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#EAF0FF] text-[#2456D8]">
-            <MapPin className="h-5 w-5" />
+          <span className="relative flex h-[72px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[#EAF0FF] to-slate-50 text-[#2456D8]">
+            {showImage ? <img src={listing.imageUrl} alt="" onError={() => setImageFailed(true)} className="h-full w-full object-cover" /> : <Image className="h-5 w-5" />}
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-[15px] font-black leading-tight tracking-[-0.015em] text-[#0F1C2E]">
@@ -27,6 +29,20 @@ export default function DirectoryListingCard({ listing, onOpen, onReportCorrecti
           <ExternalLink className="mt-1 h-4 w-4 shrink-0 text-slate-300" />
         </div>
       </button>
+
+      {listing.whyGo && (
+        <div className="mt-3 rounded-2xl bg-slate-50 px-3 py-2.5">
+          <span className="text-[9px] font-black uppercase tracking-[0.11em] text-[#2456D8]">Why go</span>
+          <p className="mt-1 text-[11px] font-semibold leading-snug text-slate-600">{listing.whyGo}</p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {(listing.tags || []).slice(0, 5).map((tag) => <span key={tag} className="rounded-full bg-white px-2 py-1 text-[9px] font-black text-slate-500">{tag}</span>)}
+          </div>
+        </div>
+      )}
+
+      {showImage && (
+        <a href={listing.imageSourceUrl} target="_blank" rel="noreferrer" className="mt-2 inline-flex min-h-8 items-center text-[9px] font-bold text-slate-400">Official photo · {listing.imageSourceLabel}</a>
+      )}
 
       {isKosherVerified && (
         <a
