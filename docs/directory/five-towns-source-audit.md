@@ -4,7 +4,7 @@ Checked: August 28, 2026
 
 ## Coverage
 
-The first production dataset contains the 121 sourced records assembled for the approved Five Towns prototype plus researched records that fill the previously missing health, professional-services, family, shopping, and activity groups.
+The production dataset contains 138 sourced records: the original Five Towns prototype, researched records that fill the previously missing health, professional-services, family, shopping, and activity groups, and three official local recreation listings. Thirty-seven high-confidence records are marked as featured and include source-linked, fact-based `Why go` guidance.
 
 The user-facing directory groups are:
 
@@ -50,6 +50,20 @@ Food listings without a current certifier source remain searchable but do not re
 - Camp Bnos Yam — `https://www.bnosyam.com/program/`
 - Five Towns Early Learning Center — `https://fivetownselc.org/THEN_NOW/DIRECTIONS/`
 - Warren Levi Martial Arts & Fitness — `https://warrenlevi.com/`
+
+## Featured place and official image audit
+
+Every featured place keeps its underlying listing source. `Why go` is JUnited editorial guidance based only on published amenities or the type of place; it is not presented as a customer review. A record can be featured without a photo, but a photo is exposed only when its publisher page is also stored.
+
+| Listing | Listing / fact source | Official image publisher | Image source | Checked |
+| --- | --- | --- | --- | --- |
+| Cork & Slice | `https://vaadhakashrus.org/listing/cork-slice/` | Five Towns Vaad | `https://vaadhakashrus.org/listing/cork-slice/` | 2026-08-28 |
+| Anju Modern Asian | `https://vaadhakashrus.org/listing/anju/` | Five Towns Vaad | `https://vaadhakashrus.org/listing/anju/` | 2026-08-28 |
+| Grant Park | `https://www.nassaucountyny.gov/2799/Grant-Park` | Nassau County Parks | `https://www.nassaucountyny.gov/2799/Grant-Park` | 2026-08-28 |
+| North Woodmere Park | `https://www.nassaucountyny.gov/2803/North-Woodmere-Park` | Nassau County Parks | `https://www.nassaucountyny.gov/2803/North-Woodmere-Park` | 2026-08-28 |
+| Cedarhurst Memorial Plaza | `https://www.cedarhurst.gov/community/memorial-plaza/` | Village of Cedarhurst | `https://www.cedarhurst.gov/community/memorial-plaza/` | 2026-08-28 |
+
+The remaining featured records use category artwork until an official photo with a stable publisher page is verified. JUnited does not copy review-platform photography, social-media images, or untraceable search-result images.
 
 ## Important meaning of inclusion
 

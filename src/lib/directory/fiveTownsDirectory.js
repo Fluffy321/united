@@ -1,4 +1,8 @@
 import directoryData from '@/data/fiveTownsDirectory.json';
+import {
+  FIVE_TOWNS_ADDITIONAL_LISTINGS,
+  FIVE_TOWNS_DIRECTORY_ENRICHMENT,
+} from '@/data/fiveTownsDirectoryEnrichment';
 
 export const DIRECTORY_GROUPS = [
   {
@@ -170,7 +174,15 @@ export function normalizeDirectoryListing(record) {
   };
 }
 
-export const FIVE_TOWNS_LISTINGS = directoryData.map(normalizeDirectoryListing);
+const enrichedDirectoryData = directoryData.map((record) => ({
+  ...record,
+  ...(FIVE_TOWNS_DIRECTORY_ENRICHMENT[record.id] || {}),
+}));
+
+export const FIVE_TOWNS_LISTINGS = [
+  ...enrichedDirectoryData,
+  ...FIVE_TOWNS_ADDITIONAL_LISTINGS,
+].map(normalizeDirectoryListing);
 
 export function featuredDirectoryListings(listings, { groupId, limit = 12 } = {}) {
   return listings

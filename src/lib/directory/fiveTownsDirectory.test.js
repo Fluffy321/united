@@ -151,4 +151,21 @@ describe('Five Towns directory', () => {
 
     expect(featuredDirectoryListings(listings).map((listing) => listing.id)).toEqual(['featured']);
   });
+
+  it('ships a useful first pass of traceable featured places', () => {
+    const featured = featuredDirectoryListings(FIVE_TOWNS_LISTINGS, { limit: 100 });
+    const groups = new Set(featured.map((listing) => listing.groupId));
+
+    expect(featured.length).toBeGreaterThanOrEqual(35);
+    expect(featured.every((listing) => listing.whyGo && listing.tags.length > 0)).toBe(true);
+    expect(
+      featured
+        .filter((listing) => listing.imageUrl)
+        .every((listing) => listing.imageSourceUrl),
+    ).toBe(true);
+    expect(
+      ['food', 'jewish-life', 'shopping', 'family', 'things-to-do']
+        .every((groupId) => groups.has(groupId)),
+    ).toBe(true);
+  });
 });
