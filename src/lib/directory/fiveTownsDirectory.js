@@ -98,6 +98,41 @@ export const DIRECTORY_GROUPS = [
   },
 ];
 
+export const DIRECTORY_INTENTS = [
+  {
+    id: 'dinner-tonight',
+    label: 'Dinner tonight',
+    groupIds: [],
+    categoryIds: ['restaurants'],
+    tags: ['Dinner', 'Sit-down', 'Date night', 'Dessert'],
+    queryTerms: ['dinner', 'restaurant', 'grill'],
+  },
+  {
+    id: 'kids',
+    label: 'Kids',
+    groupIds: [],
+    categoryIds: ['camps', 'childcare', 'attractions', 'activities', 'recreation'],
+    tags: ['Kids', 'Family', 'Pool', 'Sports', 'Outside', 'Playground'],
+    queryTerms: ['children', 'kids', 'family', 'playground'],
+  },
+  {
+    id: 'coffee',
+    label: 'Coffee',
+    groupIds: [],
+    categoryIds: [],
+    tags: ['Coffee', 'Quiet', 'Meet'],
+    queryTerms: ['coffee', 'cafe'],
+  },
+  {
+    id: 'shabbat-shopping',
+    label: 'Shabbat shopping',
+    groupIds: [],
+    categoryIds: ['groceries', 'bakeries', 'judaica', 'florists'],
+    tags: ['Shabbat', 'Prepared food', 'Gifts'],
+    queryTerms: ['shabbat', 'challah', 'judaica', 'flowers'],
+  },
+];
+
 const LEGACY_TYPE_MAP = {
   shul: ['jewish-life', 'shuls'],
   restaurant: ['food', 'restaurants'],
@@ -230,6 +265,28 @@ export function filterDirectoryListings(listings, filters = {}) {
       listing.categoryId,
     ].join(' ').toLowerCase();
     return haystack.includes(query);
+  });
+}
+
+export function filterListingsByIntent(listings, intentId) {
+  const intent = DIRECTORY_INTENTS.find((item) => item.id === intentId);
+  if (!intent) return listings;
+
+  const groupIds = new Set(intent.groupIds.map((value) => value.toLowerCase()));
+  const categoryIds = new Set(intent.categoryIds.map((value) => value.toLowerCase()));
+  const tags = new Set(intent.tags.map((value) => value.toLowerCase()));
+  const queryTerms = intent.queryTerms.map((value) => value.toLowerCase());
+
+  return listings.filter((listing) => {
+    if (groupIds.has(String(listing.groupId || '').toLowerCase())) return true;
+    if (categoryIds.has(String(listing.categoryId || '').toLowerCase())) return true;
+    if ((listing.tags || []).some((tag) => tags.has(String(tag).toLowerCase()))) return true;
+
+    const searchable = [listing.name, listing.description, listing.whyGo]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    return queryTerms.some((term) => searchable.includes(term));
   });
 }
 

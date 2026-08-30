@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
+  DIRECTORY_INTENTS,
   DIRECTORY_GROUPS,
   FIVE_TOWNS_LISTINGS,
   canShowKosherVerification,
   directoryMapLinks,
   featuredDirectoryListings,
   filterDirectoryListings,
+  filterListingsByIntent,
   normalizeDirectoryListing,
 } from './fiveTownsDirectory';
 
@@ -180,5 +182,50 @@ describe('Five Towns directory', () => {
       source_url: 'https://example.gov/park',
     });
     expect(listing.town).toBe('North Woodmere');
+  });
+
+  it('offers the four approved directory shortcuts', () => {
+    expect(DIRECTORY_INTENTS.map((intent) => intent.label)).toEqual([
+      'Dinner tonight',
+      'Kids',
+      'Coffee',
+      'Shabbat shopping',
+    ]);
+  });
+
+  it('filters intents using only real listing metadata', () => {
+    const sample = [
+      {
+        id: 'dinner',
+        name: 'Central Avenue Grill',
+        description: 'Sit-down dinner',
+        whyGo: 'Good for dinner',
+        groupId: 'food',
+        categoryId: 'restaurants',
+        tags: ['Dinner', 'Sit-down'],
+      },
+      {
+        id: 'park',
+        name: 'Grant Park',
+        description: 'Playground and pool',
+        whyGo: 'Get the kids outside',
+        groupId: 'things-to-do',
+        categoryId: 'recreation',
+        tags: ['Kids', 'Outside'],
+      },
+      {
+        id: 'lawyer',
+        name: 'Local Law Office',
+        description: 'Legal services',
+        whyGo: '',
+        groupId: 'services',
+        categoryId: 'lawyers',
+        tags: [],
+      },
+    ];
+
+    expect(filterListingsByIntent(sample, 'dinner-tonight').map((item) => item.id)).toEqual(['dinner']);
+    expect(filterListingsByIntent(sample, 'kids').map((item) => item.id)).toEqual(['park']);
+    expect(filterListingsByIntent(sample, 'missing')).toBe(sample);
   });
 });
