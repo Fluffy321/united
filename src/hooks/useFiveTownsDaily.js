@@ -18,7 +18,7 @@ function queryData(query, sourceUrl) {
   };
 }
 
-export default function useFiveTownsDaily({ trafficApiKey } = {}) {
+export default function useFiveTownsDaily() {
   const weatherQuery = useQuery({
     queryKey: ['five-towns-daily', 'weather'],
     queryFn: ({ signal }) => fetchFiveTownsWeather({ signal }),
@@ -32,16 +32,12 @@ export default function useFiveTownsDaily({ trafficApiKey } = {}) {
     staleTime: ONE_HOUR,
     retry: 1,
   });
-  const resolvedTrafficKey = trafficApiKey ?? import.meta.env.VITE_511NY_API_KEY ?? '';
   const trafficQuery = useQuery({
-    queryKey: ['five-towns-daily', 'traffic', Boolean(resolvedTrafficKey)],
-    queryFn: ({ signal }) => fetchFiveTownsTraffic({
-      apiKey: resolvedTrafficKey,
-      signal,
-    }),
+    queryKey: ['five-towns-daily', 'traffic'],
+    queryFn: () => fetchFiveTownsTraffic(),
     staleTime: FIVE_MINUTES,
     refetchInterval: 5 * 60 * 1000,
-    retry: resolvedTrafficKey ? 1 : false,
+    retry: 1,
   });
 
   return {

@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
+import { readFile } from 'node:fs/promises';
 import {
   FIVE_TOWNS_DEFAULT_LOCATION,
   fetchFiveTownsJewishTimes,
   fetchFiveTownsTraffic,
   fetchFiveTownsWeather,
-  nearFiveTowns,
 } from './fiveTownsDailyService';
 
 describe('Five Towns daily information providers', () => {
@@ -43,40 +43,77 @@ describe('Five Towns daily information providers', () => {
     });
   });
 
-  it('never reports an all-clear when 511NY is not configured', async () => {
-    await expect(fetchFiveTownsTraffic({ apiKey: '' })).resolves.toMatchObject({
+  it('never reports an all-clear when the protected traffic function is unavailable', async () => {
+    await expect(fetchFiveTownsTraffic({ client: null })).resolves.toMatchObject({
       status: 'unavailable',
       incidents: [],
       sourceUrl: 'https://511ny.org/',
     });
   });
 
-  it('keeps only relevant active events near the Five Towns', async () => {
-    const fetchImpl = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => [
-        { ID: 1, County: 'Nassau', Latitude: 40.63, Longitude: -73.71, EventType: 'accidentsAndIncidents', Description: 'Crash' },
-        { ID: 2, County: 'Nassau', Latitude: 40.64, Longitude: -73.72, EventType: 'weatherConditions', Description: 'Fog' },
-        { ID: 3, County: 'Albany', Latitude: 42.65, Longitude: -73.75, EventType: 'roadwork', Description: 'Work' },
-      ],
-    });
+  it('loads constrained traffic results through the protected Supabase function', async () => {
+    const client = {
+      functions: {
+        invoke: vi.fn().mockResolvedValue({
+          data: {
+            status: 'ready',
+            updatedAt: '2026-08-30T12:00:00Z',
+            sourceLabel: '511NY',
+            sourceUrl: 'https://511ny.org/',
+            incidents: [{ id: '1', description: 'Crash', road: 'Peninsula Boulevard' }],
+          },
+          error: null,
+        }),
+      },
+    };
 
-    const result = await fetchFiveTownsTraffic({ fetchImpl, apiKey: 'test' });
+    const result = await fetchFiveTownsTraffic({ client });
     expect(result.status).toBe('ready');
     expect(result.incidents.map((item) => item.id)).toEqual(['1']);
+    expect(client.functions.invoke).toHaveBeenCalledWith('five-towns-traffic', { body: {} });
+    expect(JSON.stringify(client.functions.invoke.mock.calls)).not.toContain('key');
   });
 
-  it('distinguishes a verified empty 511NY result from unavailable data', async () => {
-    const fetchImpl = vi.fn().mockResolvedValue({ ok: true, json: async () => [] });
-    await expect(fetchFiveTownsTraffic({ fetchImpl, apiKey: 'test' })).resolves.toMatchObject({
+  it('distinguishes a verified empty function result from unavailable data', async () => {
+    const client = {
+      functions: {
+        invoke: vi.fn().mockResolvedValue({
+          data: {
+            status: 'empty',
+            updatedAt: '2026-08-30T12:00:00Z',
+            sourceLabel: '511NY',
+            sourceUrl: 'https://511ny.org/',
+            incidents: [],
+          },
+          error: null,
+        }),
+      },
+    };
+    await expect(fetchFiveTownsTraffic({ client })).resolves.toMatchObject({
       status: 'empty',
       incidents: [],
     });
   });
 
-  it('measures whether a coordinate is near the Five Towns', () => {
-    expect(nearFiveTowns({ Latitude: 40.63, Longitude: -73.71 }, 12)).toBe(true);
-    expect(nearFiveTowns({ Latitude: 42.65, Longitude: -73.75 }, 12)).toBe(false);
+  it('returns unavailable for function errors and malformed responses', async () => {
+    const failingClient = {
+      functions: { invoke: vi.fn().mockResolvedValue({ data: null, error: new Error('offline') }) },
+    };
+    const malformedClient = {
+      functions: { invoke: vi.fn().mockResolvedValue({ data: { status: 'ready' }, error: null }) },
+    };
+
+    await expect(fetchFiveTownsTraffic({ client: failingClient })).resolves.toMatchObject({ status: 'unavailable' });
+    await expect(fetchFiveTownsTraffic({ client: malformedClient })).resolves.toMatchObject({ status: 'unavailable' });
+  });
+
+  it('never reads a browser-exposed 511NY credential', async () => {
+    const hookSource = await readFile(new URL('../hooks/useFiveTownsDaily.js', import.meta.url), 'utf8');
+    const envExample = await readFile(new URL('../../.env.example', import.meta.url), 'utf8');
+
+    expect(hookSource).not.toContain('VITE_511NY_API_KEY');
+    expect(envExample).not.toContain('VITE_511NY_API_KEY');
+    expect(envExample).toContain('NY511_API_KEY');
   });
 
   it('keeps available Jewish and solar times when one Hebcal response is missing', async () => {

@@ -1,4 +1,5 @@
 import { getShabbatTimes, getZmanim } from '@/lib/hebrewDate';
+import { supabase } from '@/api/supabaseClient';
 
 export const FIVE_TOWNS_DEFAULT_LOCATION = Object.freeze({
   name: 'Five Towns',
@@ -12,12 +13,6 @@ export const FIVE_TOWNS_DEFAULT_LOCATION = Object.freeze({
 
 const OPEN_METEO_SOURCE = 'https://open-meteo.com/';
 const TRAFFIC_SOURCE = 'https://511ny.org/';
-const FIVE_TOWNS_TRAFFIC_RADIUS_MILES = 12;
-const RELEVANT_TRAFFIC_TYPES = new Set([
-  'accidentsandincidents',
-  'closures',
-  'roadwork',
-]);
 
 const WEATHER_LABELS = {
   0: 'Clear',
@@ -102,55 +97,7 @@ export async function fetchFiveTownsWeather({ fetchImpl = fetch, signal } = {}) 
   }
 }
 
-function coordinate(event, names) {
-  for (const name of names) {
-    const value = Number(event?.[name]);
-    if (Number.isFinite(value)) return value;
-  }
-  return null;
-}
-
-function milesBetween(lat1, lng1, lat2, lng2) {
-  const radians = (degrees) => degrees * (Math.PI / 180);
-  const earthRadiusMiles = 3958.8;
-  const dLat = radians(lat2 - lat1);
-  const dLng = radians(lng2 - lng1);
-  const a = Math.sin(dLat / 2) ** 2
-    + Math.cos(radians(lat1)) * Math.cos(radians(lat2)) * Math.sin(dLng / 2) ** 2;
-  return earthRadiusMiles * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-export function nearFiveTowns(event, radiusMiles = FIVE_TOWNS_TRAFFIC_RADIUS_MILES) {
-  const latitude = coordinate(event, ['Latitude', 'latitude', 'Lat', 'lat']);
-  const longitude = coordinate(event, ['Longitude', 'longitude', 'Lng', 'lng']);
-  if (latitude === null || longitude === null) return false;
-  return milesBetween(
-    FIVE_TOWNS_DEFAULT_LOCATION.latitude,
-    FIVE_TOWNS_DEFAULT_LOCATION.longitude,
-    latitude,
-    longitude,
-  ) <= radiusMiles;
-}
-
-function trafficType(event) {
-  return String(event?.EventType || event?.eventType || event?.Type || '')
-    .replace(/[^a-z]/gi, '')
-    .toLowerCase();
-}
-
-function normalizeTrafficEvent(event) {
-  return {
-    id: String(event.ID ?? event.Id ?? event.id ?? ''),
-    type: event.EventType || event.eventType || event.Type || 'Traffic event',
-    description: event.Description || event.description || event.Message || 'Traffic update',
-    road: event.RoadwayName || event.roadwayName || event.Road || '',
-    startAt: event.StartDate || event.startDate || '',
-    latitude: coordinate(event, ['Latitude', 'latitude', 'Lat', 'lat']),
-    longitude: coordinate(event, ['Longitude', 'longitude', 'Lng', 'lng']),
-  };
-}
-
-export async function fetchFiveTownsTraffic({ fetchImpl = fetch, apiKey = '', signal } = {}) {
+export async function fetchFiveTownsTraffic({ client = supabase } = {}) {
   const base = {
     updatedAt: '',
     sourceLabel: '511NY',
@@ -159,29 +106,33 @@ export async function fetchFiveTownsTraffic({ fetchImpl = fetch, apiKey = '', si
     data: { incidents: [] },
   };
 
-  if (!String(apiKey || '').trim()) {
+  if (!client?.functions?.invoke) {
     return { ...base, status: 'unavailable' };
   }
 
   try {
-    const url = new URL('https://511ny.org/api/v2/get/event');
-    url.searchParams.set('key', apiKey);
-    url.searchParams.set('format', 'json');
-    const response = await fetchImpl(url.toString(), { signal: requestSignal(signal) });
-    if (!response.ok) throw new Error(`511NY returned ${response.status}`);
-    const payload = await response.json();
-    const events = Array.isArray(payload)
-      ? payload
-      : payload?.events || payload?.Events || payload?.data || [];
-    const incidents = events
-      .filter((event) => RELEVANT_TRAFFIC_TYPES.has(trafficType(event)))
-      .filter((event) => nearFiveTowns(event))
-      .map(normalizeTrafficEvent);
+    const { data, error } = await client.functions.invoke('five-towns-traffic', { body: {} });
+    if (error || !data || !['ready', 'empty'].includes(data.status) || !Array.isArray(data.incidents)) {
+      return { ...base, status: 'unavailable' };
+    }
+    if (data.status === 'ready' && data.incidents.length === 0) {
+      return { ...base, status: 'unavailable' };
+    }
+
+    const incidents = data.incidents.slice(0, 20).map((incident) => ({
+      id: String(incident?.id || ''),
+      type: String(incident?.type || 'Traffic event'),
+      description: String(incident?.description || 'Traffic update'),
+      road: String(incident?.road || ''),
+      startAt: String(incident?.startAt || ''),
+      latitude: Number.isFinite(Number(incident?.latitude)) ? Number(incident.latitude) : null,
+      longitude: Number.isFinite(Number(incident?.longitude)) ? Number(incident.longitude) : null,
+    }));
 
     return {
       ...base,
-      status: incidents.length ? 'ready' : 'empty',
-      updatedAt: new Date().toISOString(),
+      status: data.status,
+      updatedAt: String(data.updatedAt || ''),
       incidents,
       data: { incidents },
     };
