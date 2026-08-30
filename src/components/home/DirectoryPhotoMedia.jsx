@@ -72,8 +72,8 @@ export function DirectoryPhotoMediaView({
           <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/80 shadow-sm">
             <Image className="h-5 w-5" />
           </span>
-          <span className="text-[10px] font-black">Explore {listing?.name || 'this place'}</span>
-          {listing?.town && <span className="flex items-center gap-1 text-[9px] font-bold opacity-70"><MapPin className="h-3 w-3" />{listing.town}</span>}
+          {!compact && <span className="text-[10px] font-black">Explore {listing?.name || 'this place'}</span>}
+          {!compact && listing?.town && <span className="flex items-center gap-1 text-[9px] font-bold opacity-70"><MapPin className="h-3 w-3" />{listing.town}</span>}
         </div>
       )}
 
