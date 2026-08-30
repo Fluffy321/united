@@ -25,6 +25,22 @@ describe('Five Towns directory', () => {
     expect(Object.values(catalog).every((listing) => listing.name && listing.address)).toBe(true);
   });
 
+  it('gives every listing a safe official, runtime, and category-fallback photo path', () => {
+    const catalogUrl = new URL('../../../supabase/functions/_shared/fiveTownsDirectoryPhotoCatalog.json', import.meta.url);
+    const catalog = JSON.parse(readFileSync(fileURLToPath(catalogUrl), 'utf8'));
+
+    expect(FIVE_TOWNS_LISTINGS.every((listing) => Boolean(catalog[listing.id]))).toBe(true);
+    expect(
+      FIVE_TOWNS_LISTINGS
+        .filter((listing) => listing.imageUrl)
+        .every((listing) => (
+          listing.imageUrl.startsWith('https://') &&
+          listing.imageSourceUrl.startsWith('https://') &&
+          Boolean(listing.imageSourceLabel)
+        )),
+    ).toBe(true);
+  });
+
   it('exposes the eight approved groups with populated subcategories', () => {
     expect(DIRECTORY_GROUPS).toHaveLength(8);
     expect(DIRECTORY_GROUPS.map((group) => group.id)).toEqual([
