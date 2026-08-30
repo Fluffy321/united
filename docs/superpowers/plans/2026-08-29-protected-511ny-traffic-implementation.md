@@ -4,7 +4,7 @@
 
 **Goal:** Make live Five Towns traffic available without exposing the 511NY developer key in browser code.
 
-**Architecture:** Move 511NY provider access and geographic filtering into a public-read Supabase Edge Function whose only secret is `NY511_API_KEY`. The React client invokes that function through the configured Supabase project and normalizes its constrained response into the existing four dashboard states.
+**Architecture:** Move 511NY provider access and geographic filtering into a Supabase Edge Function whose only custom secret is `NY511_API_KEY`. Keep Supabase's normal request authorization enabled, use the SDK's current browser CORS headers, and let the React client invoke the constrained response through the configured project.
 
 **Tech Stack:** Supabase Edge Functions, Deno TypeScript, supabase-js, React Query, Vitest
 
@@ -12,6 +12,7 @@
 
 - Store the provider credential only as the Supabase secret `NY511_API_KEY`.
 - Never ship the key through a `VITE_` variable, URL, response body, or client log.
+- Keep normal Supabase function request authorization enabled; do not deploy with `--no-verify-jwt`.
 - Show only loading, incidents, verified empty, or unavailable states.
 - A verified all-clear is allowed only after a successful 511NY response.
 - Limit results to relevant crashes, closures, and roadwork within 12 miles of the Five Towns center.
@@ -51,7 +52,7 @@ Expected: FAIL because the handler does not exist.
 
 - [ ] **Step 3: Implement the handler**
 
-Use a Five Towns center of latitude `40.632`, longitude `-73.716`, and radius `12` miles. Request `https://511ny.org/api/v2/get/event?key=<secret>&format=json`; accept array, `events`, `Events`, or `data` payload shapes; match normalized event types `accidentsandincidents`, `closures`, and `roadwork`; and return only the stated normalized fields. Use `content-type: application/json`, `access-control-allow-origin: *`, and the specified cache header.
+Use a Five Towns center of latitude `40.632`, longitude `-73.716`, and radius `12` miles. Request `https://511ny.org/api/v2/get/event?key=<secret>&format=json`; accept array, `events`, `Events`, or `data` payload shapes; match normalized event types `accidentsandincidents`, `closures`, and `roadwork`; and return only the stated normalized fields. Use `content-type: application/json`, the official `corsHeaders` export from `npm:@supabase/supabase-js@2.105.3/cors`, and the specified cache header.
 
 - [ ] **Step 4: Run the Deno test and confirm success**
 
@@ -77,7 +78,7 @@ git commit -m "feat: add protected Five Towns traffic handler"
 
 - [ ] **Step 1: Add the HTTP entry point**
 
-Handle `OPTIONS` with status 204 and CORS headers. For `GET` and `POST`, call `handleTrafficRequest(request, { apiKey: Deno.env.get('NY511_API_KEY') || '', fetchImpl: fetch, now: () => new Date() })`. Return 405 JSON for all other methods.
+Handle `OPTIONS` with status 204 and the SDK CORS headers. For `GET` and `POST`, call `handleTrafficRequest(request, { apiKey: Deno.env.get('NY511_API_KEY') || '', fetchImpl: fetch, now: () => new Date() })`. Return 405 JSON for all other methods. Do not add a `verify_jwt = false` function override.
 
 - [ ] **Step 2: Type-check the function files**
 
@@ -148,7 +149,7 @@ git commit -m "feat: connect protected 511NY traffic"
 
 - [ ] **Step 1: Document the exact operator commands**
 
-Document: request the key from `https://511ny.org/developers/doc`; run `supabase secrets set NY511_API_KEY='<key>' --project-ref <project-ref>`; run `supabase functions deploy five-towns-traffic --project-ref <project-ref> --no-verify-jwt`; and verify the dashboard without placing the key in Git, Vercel, screenshots, chat, or logs.
+Document: request the key from `https://511ny.org/developers/doc`; run `supabase secrets set NY511_API_KEY='<key>' --project-ref <project-ref>`; run `supabase functions deploy five-towns-traffic --project-ref <project-ref>`; and verify the dashboard without placing the key in Git, Vercel, screenshots, chat, or logs.
 
 - [ ] **Step 2: Run all local checks**
 
