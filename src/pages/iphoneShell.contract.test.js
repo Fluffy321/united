@@ -16,6 +16,7 @@ describe('iPhone app shell contract', () => {
     expect(layoutSource).toContain('app-bottom-nav');
     expect(layoutSource).toContain('app-fixed-layer');
     expect(layoutSource).toContain('app-floating-stack');
+    expect(layoutSource).toContain("currentPageName !== 'Feed'");
   });
 
   it('keeps Communities errors inside the same actionable recovery path', () => {
@@ -30,7 +31,8 @@ describe('iPhone app shell contract', () => {
   });
 
   it('keeps the real help request flow available after removing the duplicate Home action', () => {
-    expect(feedSource).toContain('<LiveCategoryDeck');
+    expect(feedSource).toContain('<FiveTownsHomeDashboard');
+    expect(feedSource).toContain("navigate('/MitzvahCircle')");
     expect(feedSource).not.toContain('<HomeStartHere');
     expect(helpSource).toContain("searchParams.get('action') !== 'request'");
     expect(helpSource).toContain("next.delete('action')");

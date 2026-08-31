@@ -224,7 +224,7 @@ Goals:
     priority: PRIORITY.HIGH,
     title: 'World-Class Screen-by-Screen Product Redesign',
     description: 'Redesign JUnited one real user-facing screen at a time, using the approved login welcome as the first quality benchmark. Each screen gets its own visual exploration, focused design spec, implementation plan, browser verification, and shipped roadmap note instead of a risky global reskin.',
-    why: 'Product direction confirmed 2026-07-28: JUnited should feel like a cohesive, successful consumer app across every path, but each surface has different jobs, density, trust, and mobile constraints. Screen-level decisions need deliberate owner review while shared patterns accumulate into a coherent system. Progress 2026-08-10: the approved Feed Priority Stack Home is implemented and locally verified on codex/mobile-home-brief (explainable priorities, one contribution entry, two-row category deck, focused Helping route, and Communities action cleanup). Progress 2026-08-11: the approved personalized Home setup shipped to production through PR #9 (three-step mobile setup, account persistence, explicit More/Normal/Less/Hide ranking, catch-up timing, first-run gate, and permanent Settings controls). Progress 2026-08-13: the iPhone reliability pass shipped through PR #10, preserving the live five-tab app while adding shared bottom-nav clearance, useful real actions on an empty Home, and timed retry/home recovery for slow or failed Communities loading. Later the same day, the redundant empty-Home Start here card was removed because its four actions duplicated the richer Across your community deck; an empty feed now ends cleanly after that deck. Progress later 2026-08-13: the approved Communities iPhone focus shipped through PR #11, putting My/Discover first, showing three honest recommendations, collapsing ten large category cards into one compact rail, and moving Jewish tools below the community catalog. Progress later 2026-08-13: the approved Directory iPhone focus shipped through PR #12, opening to business search, replacing the empty promotional hero with direct search and compact categories, preserving the Community Map, and separating a new directory from filtered no matches honestly. Progress later 2026-08-13: the first Profile cleanup shipped through PR #13. The stronger approved owner Me dashboard shipped through PR #14 with real Jewish times, personal alerts, useful shortcuts, compact identity, and honest empty states, while preserving other-member relationship profiles. Progress later 2026-08-13: the approved Help redesign adds compact horizontal rails for public needs and public offers, direction-aware posting and detail views, and keeps private volunteer replies out of the public offer rail. This redesign program remains planned until the agreed live route inventory is completed screen by screen.',
+    why: 'Product direction confirmed 2026-07-28: JUnited should feel like a cohesive, successful consumer app across every path, but each surface has different jobs, density, trust, and mobile constraints. Screen-level decisions need deliberate owner review while shared patterns accumulate into a coherent system. Progress 2026-08-10: the approved Feed Priority Stack Home is implemented and locally verified on codex/mobile-home-brief (explainable priorities, one contribution entry, two-row category deck, focused Helping route, and Communities action cleanup). Progress 2026-08-11: the approved personalized Home setup shipped to production through PR #9 (three-step mobile setup, account persistence, explicit More/Normal/Less/Hide ranking, catch-up timing, first-run gate, and permanent Settings controls). Progress 2026-08-13: the iPhone reliability pass shipped through PR #10, preserving the live five-tab app while adding shared bottom-nav clearance, useful real actions on an empty Home, and timed retry/home recovery for slow or failed Communities loading. Later the same day, the redundant empty-Home Start here card was removed because its four actions duplicated the richer Across your community deck; an empty feed now ends cleanly after that deck. Progress later 2026-08-13: the approved Communities iPhone focus shipped through PR #11, putting My/Discover first, showing three honest recommendations, collapsing ten large category cards into one compact rail, and moving Jewish tools below the community catalog. Progress later 2026-08-13: the approved Directory iPhone focus shipped through PR #12, opening to business search, replacing the empty promotional hero with direct search and compact categories, preserving the Community Map, and separating a new directory from filtered no matches honestly. Progress later 2026-08-13: the first Profile cleanup shipped through PR #13. The stronger approved owner Me dashboard shipped through PR #14 with real Jewish times, personal alerts, useful shortcuts, compact identity, and honest empty states, while preserving other-member relationship profiles. Progress later 2026-08-13: the approved Help redesign adds compact horizontal rails for public needs and public offers, direction-aware posting and detail views, and keeps private volunteer replies out of the public offer rail. Progress 2026-08-29: the locked Five Towns Home dashboard is the main Home surface with a compact live utility panel, a sourced 138-listing Jewish directory across eight groups, 37 featured places with transparent Why go guidance, official-source photos, need-based nearby discovery, real local updates, and honest partial-provider states. Progress 2026-08-30: the approved Living Directory pass adds real intent filters, brighter sourced category cards, official-photo discovery rails, and honest source language without changing the locked dashboard structure. Progress later 2026-08-30: the hybrid directory-photo pass gives all 138 listings a reviewed official-photo, protected Google Places, or category-art path with visible attribution and server-only credentials; production activation depends on the restricted Google secret and Edge Function deployment. Progress 2026-08-31: the approved community-led Home ending replaces repeated utility and directory content below Useful nearby with real joined-circle activity plus real tonight-or-upcoming events, including honest empty/error states and direct circle, event, and publishing actions. Progress later 2026-08-31: the connected Home pass unifies section language and spacing, replaces scattered utility cards with one sourced Today at a glance panel, reduces the first directory choice to four clear doors, adds reversible per-user More/Less/Hide controls for nearby suggestions, and combines real circles and real events under one compact People and plans section. This redesign program remains planned until the agreed live route inventory is completed screen by screen.',
     prompt: `You are continuing JUnited's world-class screen-by-screen product redesign.
 
 Context:
@@ -1339,19 +1339,18 @@ Goals:
   {
     id: 'events-system',
     category: 'Community',
-    status: STATUS.SHIPPED,
+    status: STATUS.PLANNED,
     priority: PRIORITY.MEDIUM,
     title: 'Standalone Events System',
-    description: 'Full events pages: event listings, RSVP, calendar view, MyEvents, and ticket support. (Community-level events tab is already shipped.)',
-    shippedNote: 'Shipped. /Events queries community_events for user\'s followed communities. /MyEvents shows going RSVPs + created events. /CommunityCalendar redirects to /Events; the old CommunityCalendar page file was removed during the canonical-route cleanup. EventTicketSection reused for RSVP. Routes live in App.jsx.',
+    description: 'Build canonical cross-community event listings, RSVP views, a calendar, My Events, and ticket support. Community-level event tabs and the Jewish calendar are already shipped, but /Events, /MyEvents, and /CommunityCalendar currently remain documented legacy redirects to /Feed.',
+    why: 'Roadmap truth corrected 2026-08-31: the standalone event page files were removed during the dead-code cleanup and all three standalone routes are listed in LEGACY_FEED_ROUTES in src/App.jsx. Real community events still appear inside communities and on the Home dashboard; the separate cross-community destination has not shipped.',
     prompt: `You are implementing the standalone Events System for JUnited.
 
-Context: Community-level events (CommunityEventsTab.jsx) are already live. These are the
-standalone cross-community events pages which are currently redirecting to Feed.
+Context: Community-level events (CommunityEventsTab.jsx) and the Jewish calendar are already live. These are the standalone cross-community events pages which currently redirect to Feed through LEGACY_FEED_ROUTES in src/App.jsx. The former Events.jsx and MyEvents.jsx files were intentionally deleted and must not be assumed to exist.
 
 Goals:
-1. Re-add Events page (/Events) to App.jsx — it already exists as src/pages/Events.jsx.
-2. Re-add MyEvents (/MyEvents) and CommunityCalendar (/CommunityCalendar) routes.
+1. Build a canonical Events page for /Events using the real community_events data and existing event components.
+2. Build /MyEvents from events the current user created or RSVP'd to, and decide whether /CommunityCalendar should alias the Jewish calendar or the Events page.
 3. Wire community_event_rsvps table: ensure CommunityEvent and CommunityEventRSVP entities exist in base44Client.js.
 4. Connect Events.jsx to real DB data (filter by upcoming start_date, communities the user follows).
 5. Connect MyEvents.jsx to events the user has RSVP'd to.
@@ -1977,13 +1976,38 @@ Goals:
   // ── Automation & AI ───────────────────────────────────────────────────────
 
   {
+    id: 'smart-publishing-ai-admin',
+    category: 'Automation & AI',
+    status: STATUS.PLANNED,
+    priority: PRIORITY.HIGH,
+    title: 'Smart Publishing and AI Admin',
+    description: 'Give every signed-in member one iPhone-first publishing flow for 26 useful local content types, route each submission into JUnited’s existing native surfaces, and support it with conservative asynchronous AI review plus final human control for Aryeh and Jonny.',
+    why: 'Implementation is active on codex/smart-publishing-ai-admin with the publisher, authenticated Edge Function boundary, AI moderation policy/worker, and iPhone Admin Center UI built. The secure Postgres routing, RLS, appeals, expiration, deployment, and live verification remain open because the Mac does not yet have Docker for a safe local Supabase test database.',
+    prompt: `You are finishing Smart Publishing and AI Admin for JUnited.
+
+Context:
+- Approved design: docs/superpowers/specs/2026-08-18-smart-publishing-ai-admin-design.md
+- Implementation plan: docs/superpowers/plans/2026-08-18-smart-publishing-ai-admin.md
+- Active branch: codex/smart-publishing-ai-admin
+- Existing work includes the 26-type /Publish flow, one global creation entry, authenticated publish-content Edge Function, conservative OpenAI moderation worker, and iPhone Admin Center AI review UI.
+
+Goals:
+1. Install/start Docker locally and run the existing pgTAP tests against a disposable Supabase database; never use production as the migration test database.
+2. Complete and verify the smart publishing migration: native destination routing, idempotency, RLS, explicit grants, moderation jobs, admin-only review RPCs, and owner list/update/end operations.
+3. Add and verify My Publishing, appeals, content expiration, retry-safe worker scheduling, and plain user-facing moderation states.
+4. Run the complete JUnited self-check, Supabase security/performance advisors, iPhone and responsive browser checks, and provider-failure tests.
+5. Push through the existing draft PR, deploy only after green review, and verify junited.us end to end before merging.
+6. Update internal/roadmap.js: change this item's status to 'shipped' only after production verification and add the verification report path to shippedNote.`,
+  },
+
+  {
     id: 'five-towns-automation',
     category: 'Automation & AI',
     status: STATUS.SHIPPED,
     priority: PRIORITY.HIGH,
     title: 'Five Towns Local Updates Automation',
     description: 'Automated pipeline ingesting local updates from monitored sources and publishing to the local_updates feed.',
-    shippedNote: 'Shipped. Migration 20260515180122_local_updates_automation.sql + cron job. Cron secret verified in 20260515184322. Community post identity fix (migration 20260517034309) added community name denormalization to publish_local_update_item so feed cards show community as author. Hardened 2026-07-08: ingestion accepts only public HTTPS sources, rejects local/private addresses and redirects, enforces content types, and caps source bodies at 1 MB.',
+    shippedNote: 'Shipped. Migration 20260515180122_local_updates_automation.sql + cron job. Cron secret verified in 20260515184322. Community post identity fix (migration 20260517034309) added community name denormalization to publish_local_update_item so feed cards show community as author. Hardened 2026-07-08: ingestion accepts only public HTTPS sources, rejects local/private addresses and redirects, enforces content types, and caps source bodies at 1 MB. The 2026-08-25 Five Towns live-information expansion on codex/smart-publishing-ai-admin adds eight verified public feeds, a 30-minute schedule, a seven-day freshness gate, a four-item-per-source flood limit, verified source metadata, conservative NWS emergency handling, and direct source opening from Home. Production migration and Edge Function deployment remain subject to safe Supabase verification and merge.',
   },
 
   {
@@ -2020,7 +2044,7 @@ Goals:
     priority: PRIORITY.LOW,
     title: 'MTA / 511NY Transit Data Ingestion',
     description: 'Ingest real MTA and 511NY service alerts for the Five Towns area into the local updates feed.',
-    why: 'High local value but requires API key agreements and parsing logic. Build after the local updates pipeline proves useful.',
+    why: 'High local value but requires API key agreements and parsing logic. A protected Five Towns road-incident adapter now exists on codex/smart-publishing-ai-admin; activating it still requires the private NY511_API_KEY and a confirmed Edge Function deployment. LIRR and bus transit ingestion remain separate future work after the local updates pipeline proves useful.',
     prompt: `You are implementing MTA / 511NY transit data ingestion for JUnited.
 
 Context: The local_updates automation pipeline is already live (migration 20260515180122).

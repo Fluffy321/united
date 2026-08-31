@@ -89,6 +89,7 @@ const AdminFeedbackInbox      = lazy(() => import('@/pages/AdminFeedbackInbox'))
 const Notifications           = lazy(() => import('@/pages/Notifications'));
 const SupportJUnited          = lazy(() => import('@/pages/SupportJUnited'));
 const ThankYou                = lazy(() => import('@/pages/ThankYou'));
+const Publish                 = lazy(() => import('@/pages/Publish'));
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -204,6 +205,8 @@ const AuthenticatedApp = () => {
                 />
               ))}
             {!COMMUNITIES_ENABLED && <Route path="/Communities" element={<Navigate to="/Feed" replace />} />}
+
+            <Route path="/Publish" element={<PageTransition><AppErrorBoundary inline><Publish /></AppErrorBoundary></PageTransition>} />
 
             {/* MVP utility routes */}
             <Route path="/PublicProfile" element={<PageTransition><AppErrorBoundary inline><PublicProfile /></AppErrorBoundary></PageTransition>} />

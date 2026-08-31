@@ -1,0 +1,555 @@
+{
+  "activities-warren-levi-martial-arts": {
+    "name": "Warren Levi Martial Arts & Fitness",
+    "address": "136 Washington Ave, Cedarhurst, NY 11516"
+  },
+  "activity-cedarhurst-memorial-plaza": {
+    "name": "Cedarhurst Memorial Plaza",
+    "address": "Andrew J. Parise Park, Cedarhurst, NY 11516"
+  },
+  "activity-grant-park": {
+    "name": "Grant Park",
+    "address": "1625 Broadway, Hewlett, NY 11557"
+  },
+  "activity-north-woodmere-park": {
+    "name": "North Woodmere Park",
+    "address": "750 Hungry Harbor Rd, North Woodmere, NY 11581"
+  },
+  "family-camp-bnos-yam": {
+    "name": "Camp Bnos Yam",
+    "address": "390 Eastwood Rd, Woodmere, NY 11598"
+  },
+  "family-camp-shira": {
+    "name": "Camp Shira Jr.",
+    "address": "15 Frost Ln, Lawrence, NY 11559"
+  },
+  "family-five-towns-early-learning": {
+    "name": "Five Towns Early Learning Center",
+    "address": "112 Wahl Ave, Inwood, NY 11096"
+  },
+  "food-ahuvas-grill": {
+    "name": "Ahuva's Grill",
+    "address": "480 Rockaway Tpke, Lawrence"
+  },
+  "food-anju-modern-asian": {
+    "name": "Anju Modern Asian",
+    "address": "128 Cedarhurst Ave, Cedarhurst"
+  },
+  "food-bagel-boss-hewlett": {
+    "name": "Bagel Boss Hewlett",
+    "address": "1352 Peninsula Blvd, Hewlett"
+  },
+  "food-barbacoa": {
+    "name": "Barbacoa",
+    "address": "142 Spruce St, Cedarhurst"
+  },
+  "food-bogo-pizza": {
+    "name": "Bogo Kosher Pizza",
+    "address": "206 Rockaway Turnpike, Cedarhurst"
+  },
+  "food-cafe-chocolat": {
+    "name": "Cafe Chocolat",
+    "address": "556 Central Ave, Cedarhurst"
+  },
+  "food-carlos-gabbys": {
+    "name": "Carlos and Gabby's Lawrence",
+    "address": "143 Washington Ave, Lawrence"
+  },
+  "food-central-perk": {
+    "name": "Central Perk Cafe",
+    "address": "105 Cedarhurst Ave, Cedarhurst"
+  },
+  "food-central-pizza": {
+    "name": "Central Pizza Co",
+    "address": "608 Central Ave, Cedarhurst"
+  },
+  "food-chickies": {
+    "name": "Chickies Five Towns",
+    "address": "566 Central Ave, Cedarhurst"
+  },
+  "food-cho-sen-island": {
+    "name": "Cho-Sen Island",
+    "address": "367 Central Ave, Lawrence"
+  },
+  "food-cork-slice": {
+    "name": "Cork & Slice",
+    "address": "477 Chestnut St, Cedarhurst"
+  },
+  "food-geffen-gourmet": {
+    "name": "Geffen Gourmet",
+    "address": "407 Mill Rd, Hewlett"
+  },
+  "food-glicks-bakehouse": {
+    "name": "Glicks Bakehouse",
+    "address": "140E Washington Ave, Cedarhurst"
+  },
+  "food-gotta-getta-bagel": {
+    "name": "Gotta Getta Bagel",
+    "address": "1039 Broadway, Woodmere"
+  },
+  "food-graze-smokehouse": {
+    "name": "Graze Smokehouse",
+    "address": "529 Central Ave, Cedarhurst"
+  },
+  "food-holy-schnitzel": {
+    "name": "Holy Schnitzel Five Towns",
+    "address": "688 Central Ave, Cedarhurst"
+  },
+  "food-kiss-cafe": {
+    "name": "Kiss Cafe",
+    "address": "500 Central Ave, Cedarhurst"
+  },
+  "food-laffa-bar-hewlett": {
+    "name": "Laffa Bar & Grill",
+    "address": "1326 Peninsula Blvd, Hewlett"
+  },
+  "food-mg-craft-kitchen": {
+    "name": "MG Craft Kitchen",
+    "address": "101 Causeway, Lawrence"
+  },
+  "food-ondas-fuego": {
+    "name": "Ondas by Fuego",
+    "address": "488 Central Ave, Cedarhurst"
+  },
+  "food-patis-bakery-lawrence": {
+    "name": "Patis Bakery Lawrence",
+    "address": "95 Burnside Ave, Lawrence"
+  },
+  "food-pizzale": {
+    "name": "Pizza'le",
+    "address": "560 Central Ave, Cedarhurst"
+  },
+  "food-seasons-express-lawrence": {
+    "name": "Seasons Express Lawrence",
+    "address": "50 Doughty Blvd, Lawrence"
+  },
+  "food-smash-house": {
+    "name": "Smash House Burger",
+    "address": "594 Central Ave, Cedarhurst"
+  },
+  "food-stop-chop-roll": {
+    "name": "Stop Chop & Roll",
+    "address": "119 Cedarhurst Ave, Cedarhurst"
+  },
+  "food-stop-wok-roll": {
+    "name": "Stop Wok & Roll",
+    "address": "121 Cedarhurst Ave, Cedarhurst"
+  },
+  "food-sunflower-lawrence": {
+    "name": "Sunflower Cafe Lawrence",
+    "address": "357 Central Ave, Lawrence"
+  },
+  "food-sushi-tokyo-five-towns": {
+    "name": "Sushi Tokyo Five Towns",
+    "address": "337 Central Ave, Lawrence"
+  },
+  "food-that-sushi-spot": {
+    "name": "That Sushi Spot",
+    "address": "1058 Broadway, Woodmere"
+  },
+  "food-the-shoppe": {
+    "name": "The Shoppe Restaurant",
+    "address": "550 Central Ave, Cedarhurst"
+  },
+  "food-traditions-lawrence": {
+    "name": "Traditions Eatery",
+    "address": "302 Central Ave, Lawrence"
+  },
+  "food-uncle-mochi": {
+    "name": "Uncle Mochi Cafe",
+    "address": "500 Central Ave, Cedarhurst"
+  },
+  "food-upper-crust": {
+    "name": "Upper Crust Five Towns",
+    "address": "442 Central Ave, Cedarhurst"
+  },
+  "food-zomicks-bakery": {
+    "name": "Zomick's Bakery",
+    "address": "85 Inip Dr, Inwood"
+  },
+  "health-born-to-smile-dental": {
+    "name": "Born to Smile Dental",
+    "address": "145 Maple Ave, Cedarhurst, NY 11516"
+  },
+  "health-cedarhurst-dental": {
+    "name": "Cedarhurst Dental Office",
+    "address": "115 Maple Ave, Cedarhurst, NY 11516"
+  },
+  "health-central-aid-pharmacy": {
+    "name": "Central Aid Pharmacy",
+    "address": "546 Central Ave, Cedarhurst, NY 11516"
+  },
+  "health-five-towns-community-pharmacy": {
+    "name": "Five Towns Community Pharmacy",
+    "address": "690 Central Ave, Cedarhurst, NY 11516"
+  },
+  "health-five-towns-dental": {
+    "name": "Five Towns Dental Office",
+    "address": "22 Franklin Ave, Hewlett, NY 11557"
+  },
+  "school-bais-yaakov-5t": {
+    "name": "Bais Yaakov of the Five Towns – Elementary School",
+    "address": "15 Frost Ln, Lawrence"
+  },
+  "school-brandeis": {
+    "name": "Brandeis Hebrew Academy – Elementary School (Pre-K–8)",
+    "address": "25 Frost Ln, Lawrence"
+  },
+  "school-drs": {
+    "name": "DRS – High School for Boys (9–12)",
+    "address": "700 Ibsen St, Woodmere"
+  },
+  "school-gan-chamesh": {
+    "name": "Chabad Five Towns Gan Chamesh – Preschool (Pre-K)",
+    "address": "74 Maple Ave, Cedarhurst"
+  },
+  "school-haftr": {
+    "name": "HAFTR – Elementary School (K–5)",
+    "address": "33 Washington Ave, Lawrence (Lower School)"
+  },
+  "school-haftr-hs": {
+    "name": "HAFTR – High School (9–12)",
+    "address": "635 Central Ave, Cedarhurst"
+  },
+  "school-haftr-ms": {
+    "name": "HAFTR – Middle School (6–8)",
+    "address": "44 Frost Ln, Lawrence"
+  },
+  "school-halb": {
+    "name": "HALB – Elementary & Middle School (K–8)",
+    "address": "523 Church Ave, Woodmere"
+  },
+  "school-halb-lev-chana": {
+    "name": "HALB Lev Chana – Early Childhood Center (Nursery–K)",
+    "address": "291 Meadowview Ave, Hewlett Bay Park"
+  },
+  "school-hasc": {
+    "name": "HASC – Special Education",
+    "address": "321 Woodmere Blvd, Woodmere"
+  },
+  "school-ivdu": {
+    "name": "IVDU Long Island – Special Education",
+    "address": "410 Hungry Harbor Rd, Valley Stream"
+  },
+  "school-kol-torah": {
+    "name": "Yeshiva Kol Torah – High School (9–12)",
+    "address": "23 Donahue Ave, Inwood"
+  },
+  "school-kulanu": {
+    "name": "Kulanu Academy – Special Education",
+    "address": "620 Central Ave, Cedarhurst"
+  },
+  "school-machon-basya-rochel": {
+    "name": "Machon Basya Rochel Seminary – Post-High School",
+    "address": "137 Lawrence Ave, Lawrence"
+  },
+  "school-may": {
+    "name": "Mesivta Ateres Yaakov – High School (9–12)",
+    "address": "131 Washington Ave, Lawrence"
+  },
+  "school-mesivta-netzach-hatorah": {
+    "name": "Mesivta Netzach Hatorah – High School (9–12)",
+    "address": "111 Irving Pl, Woodmere"
+  },
+  "school-nishmas-hatorah": {
+    "name": "Yeshiva Nishmas Hatorah – High School (9–12)",
+    "address": "80 Mott Ave, Inwood"
+  },
+  "school-shulamith": {
+    "name": "Shulamith – Girls School (Pre-K–12)",
+    "address": "305 Cedarhurst Ave, Cedarhurst"
+  },
+  "school-shulamith-woodmere": {
+    "name": "Shulamith High School for Girls",
+    "address": "155 Franklin Pl, Woodmere, NY 11598"
+  },
+  "school-ska": {
+    "name": "SKA – High School for Girls (9–12)",
+    "address": "291 Meadowview Ave, Hewlett Bay Park"
+  },
+  "school-torah-academy-lc": {
+    "name": "Torah Academy of Lawrence-Cedarhurst – High School (9–12)",
+    "address": "530 Central Ave, Cedarhurst"
+  },
+  "school-ygft": {
+    "name": "Yeshiva Gedolah of the Five Towns – Post-High School",
+    "address": "218 Mosher Ave, Woodmere"
+  },
+  "school-ykli": {
+    "name": "Yeshiva Ketana of Long Island – Elementary School (Pre-K–8)",
+    "address": "321 Doughty Blvd, Inwood"
+  },
+  "school-yoss": {
+    "name": "YOSS – Elementary School (Pre-K–8)",
+    "address": "1170 William St, Hewlett"
+  },
+  "school-zucker": {
+    "name": "Zucker Jewish Academy of Five Towns – Elementary School (K–8)",
+    "address": "1000 Rosedale Rd, Valley Stream"
+  },
+  "service-achiezer": {
+    "name": "Achiezer Community Resource Center",
+    "address": "334 Central Ave, Lawrence"
+  },
+  "service-gural-jcc": {
+    "name": "The Marion & Aaron Gural JCC",
+    "address": "207 Grove Ave, Cedarhurst"
+  },
+  "service-gural-jcc-lawrence": {
+    "name": "Gural JCC Harrison-Kerr Family Campus",
+    "address": "140 Central Ave, Lawrence"
+  },
+  "service-levi-yitzchak-library": {
+    "name": "Levi Yitzchak Library & Family Center",
+    "address": "564 Central Ave, Cedarhurst"
+  },
+  "service-mikvah-sara-laya": {
+    "name": "Mikvah Sara Laya",
+    "address": "70 Roosevelt Ave, Inwood"
+  },
+  "services-bernath-rosenberg": {
+    "name": "Bernath & Rosenberg, P.C.",
+    "address": "126 Spruce St, Cedarhurst, NY 11516"
+  },
+  "services-five-towns-design-center": {
+    "name": "Five Towns Design Center",
+    "address": "461 Central Ave, Cedarhurst, NY 11516"
+  },
+  "services-lori-associates-realty": {
+    "name": "Lori & Associates LI Realty",
+    "address": "94 Spruce St, Cedarhurst, NY 11516"
+  },
+  "services-zlotowitz-law": {
+    "name": "Law Offices of Chaim C. Zlotowitz",
+    "address": "140A Washington Ave, Suite 203, Cedarhurst, NY 11516"
+  },
+  "shop-adams-glatt": {
+    "name": "Adam's Glatt Meat Market",
+    "address": "1324 Peninsula Blvd, Hewlett"
+  },
+  "shop-bingo-inwood": {
+    "name": "Bingo Wholesale",
+    "address": "603 Burnside Ave, Inwood"
+  },
+  "shop-carving-block": {
+    "name": "Carving Block",
+    "address": "140 Cedarhurst Ave, Cedarhurst"
+  },
+  "shop-cheese-store": {
+    "name": "The Cheese Store",
+    "address": "532 Central Ave, Cedarhurst"
+  },
+  "shop-five-towns-wine": {
+    "name": "Five Towns Wine & Liquor",
+    "address": "601 Burnside Ave, Inwood"
+  },
+  "shop-gourmet-glatt-cedarhurst": {
+    "name": "Gourmet Glatt Cedarhurst",
+    "address": "137 Spruce St, Cedarhurst"
+  },
+  "shop-gourmet-glatt-woodmere": {
+    "name": "Gourmet Glatt Woodmere",
+    "address": "1030 Railroad Ave, Woodmere"
+  },
+  "shop-j-greenstein": {
+    "name": "J. Greenstein & Co.",
+    "address": "524 Central Ave, Cedarhurst"
+  },
+  "shop-judaica-plus": {
+    "name": "Judaica Plus",
+    "address": "445 Central Ave, Cedarhurst"
+  },
+  "shop-oppen-scrolls": {
+    "name": "Oppen Scrolls",
+    "address": "202 Rockaway Tpke, Cedarhurst"
+  },
+  "shop-sukkah-depot-five-towns": {
+    "name": "Sukkah Depot of Five Towns",
+    "address": "445 Central Ave, Cedarhurst"
+  },
+  "shop-z-berman-books": {
+    "name": "Z. Berman Books Cedarhurst",
+    "address": "408 Central Ave, Cedarhurst"
+  },
+  "shopping-five-towns-gift": {
+    "name": "Five Towns Gift & Craft",
+    "address": "496 Central Ave, Cedarhurst, NY 11516"
+  },
+  "shul-agudah-five-towns": {
+    "name": "Agudath Israel of the Five Towns",
+    "address": "508 Peninsula Blvd, Cedarhurst"
+  },
+  "shul-ahavas-yisrael-cedarhurst": {
+    "name": "Kehillas Ahavas Yisrael",
+    "address": "568 Peninsula Blvd, Cedarhurst"
+  },
+  "shul-aish-kodesh": {
+    "name": "Congregation Aish Kodesh",
+    "address": "894 Woodmere Pl, Woodmere"
+  },
+  "shul-anshei-chesed-hewlett": {
+    "name": "Congregation Anshei Chesed",
+    "address": "1170 William St, Hewlett"
+  },
+  "shul-back-lawrence-minyan": {
+    "name": "Zichron Meir Moshe",
+    "address": "431 Mistletoe Way, Lawrence"
+  },
+  "shul-bais-avrohom-zev-lawrence": {
+    "name": "Congregation Bais Avrohom Zev",
+    "address": "2 Rockaway Turnpike, Lawrence"
+  },
+  "shul-bais-haknesses-north-woodmere": {
+    "name": "Bais Haknesses of North Woodmere",
+    "address": "649 Hungry Harbor Rd, North Woodmere"
+  },
+  "shul-bais-medrash-cedarhurst": {
+    "name": "Bais Medrash of Cedarhurst",
+    "address": "504 West Broadway, Cedarhurst"
+  },
+  "shul-bais-ment-lawrence": {
+    "name": "Bais Ment - Zichron Dovid & Sora Schwartz",
+    "address": "6 Herrick Dr, Lawrence"
+  },
+  "shul-bais-tefila": {
+    "name": "Congregation Bais Tefila",
+    "address": "409 Edward Ave, Woodmere"
+  },
+  "shul-bais-tefila-inwood": {
+    "name": "Bais Tefila of Inwood",
+    "address": "259 Doughty Blvd, Inwood"
+  },
+  "shul-bais-tefila-north-woodmere": {
+    "name": "Bais Tefillah of North Woodmere",
+    "address": "1000 Rosedale Rd, North Woodmere"
+  },
+  "shul-beit-midrash-hachaim-vehashalom": {
+    "name": "Beit Midrash Hachaim VeHashalom",
+    "address": "530 Central Ave, Cedarhurst"
+  },
+  "shul-beth-sholom-lawrence": {
+    "name": "Congregation Beth Sholom",
+    "address": "390 Broadway, Lawrence"
+  },
+  "shul-bnei-hayeshivos-north-woodmere": {
+    "name": "Kehillas Bnei Hayeshivos",
+    "address": "575 Hungry Harbor Rd, Valley Stream"
+  },
+  "shul-bostoner-lawrence": {
+    "name": "Bostoner Bais Medrash of Lawrence",
+    "address": "1109 Doughty Blvd, Lawrence"
+  },
+  "shul-chabad-five-towns": {
+    "name": "Chabad of the Five Towns",
+    "address": "74 Maple Ave, Cedarhurst"
+  },
+  "shul-chabad-hewlett": {
+    "name": "Chabad of Hewlett",
+    "address": "44 Everit Ave, Hewlett"
+  },
+  "shul-chofetz-chaim-cedarhurst": {
+    "name": "Chofetz Chaim Torah Center",
+    "address": "7 Derby Ave, Cedarhurst"
+  },
+  "shul-harborview-lawrence": {
+    "name": "Bais Medrash of Harborview",
+    "address": "218 Harborview South, Lawrence"
+  },
+  "shul-heichal-dovid-lawrence": {
+    "name": "Beis Medrash Heichal Dovid",
+    "address": "215 Central Ave, Lawrence"
+  },
+  "shul-island-woodmere": {
+    "name": "Congregation Bais Ephraim Yitzchok",
+    "address": "812 Peninsula Blvd, Woodmere"
+  },
+  "shul-kehilas-bais-yisroel": {
+    "name": "Kehilas Bais Yisroel",
+    "address": "352 West Broadway, Cedarhurst"
+  },
+  "shul-marina-inwood": {
+    "name": "JCCI / The Marina Shul of Inwood",
+    "address": "44 Bayswater Blvd, Inwood"
+  },
+  "shul-nusach-ari": {
+    "name": "Congregation Nusach Ari of the 5 Towns",
+    "address": "112 Spruce St, Cedarhurst"
+  },
+  "shul-ohr-torah-north-woodmere": {
+    "name": "Congregation Ohr Torah",
+    "address": "410 Hungry Harbor Rd, Valley Stream"
+  },
+  "shul-red-shul-cedarhurst": {
+    "name": "Kehillas Bais Yehudah Tzvi",
+    "address": "391 Oakland Ave, Cedarhurst"
+  },
+  "shul-shaaray-tefilah-lawrence": {
+    "name": "Congregation Shaaray Tefilah",
+    "address": "25 Central Ave, Lawrence"
+  },
+  "shul-shaare-emunah-cedarhurst": {
+    "name": "Shaare Emunah, Sephardic Congregation of Five Towns",
+    "address": "539 Oakland Ave, Cedarhurst"
+  },
+  "shul-temple-israel-lawrence": {
+    "name": "Temple Israel of Lawrence",
+    "address": "140 Central Ave, Lawrence"
+  },
+  "shul-tifereth-zvi-cedarhurst": {
+    "name": "Congregation Tifereth Zvi",
+    "address": "26 Columbia Ave, Cedarhurst"
+  },
+  "shul-woodmere": {
+    "name": "Young Israel of Woodmere",
+    "address": "859 Peninsula Blvd, Woodmere"
+  },
+  "shul-woodsburgh-minyan": {
+    "name": "Woodsburgh Minyan",
+    "address": "850 Keene Ln, Woodsburgh"
+  },
+  "shul-yih": {
+    "name": "Young Israel of Hewlett",
+    "address": "1 Piermont Ave, Hewlett"
+  },
+  "shul-yilc": {
+    "name": "Young Israel of Lawrence-Cedarhurst",
+    "address": "8 Spruce St, Cedarhurst"
+  },
+  "shul-young-israel-north-woodmere": {
+    "name": "Young Israel of North Woodmere",
+    "address": "634 Hungry Harbor Rd, North Woodmere"
+  },
+  "vaad-bagel-boys-central": {
+    "name": "Bagel Boys On Central",
+    "address": "598 Central Ave, Cedarhurst, NY 11516"
+  },
+  "vaad-bean-and-berry": {
+    "name": "Bean & Berry",
+    "address": "349 Central Ave, Lawrence, NY 11559"
+  },
+  "vaad-bellagio-cafe": {
+    "name": "Bellagio Cafe NY",
+    "address": "345 Central Ave, Lawrence, NY 11559"
+  },
+  "vaad-berrylicious": {
+    "name": "Berrylicious",
+    "address": "590 Central Ave, Cedarhurst, NY 11516"
+  },
+  "vaad-bravo-kosher-pizza": {
+    "name": "Bravo Kosher Pizza",
+    "address": "1270 W Broadway, Hewlett, NY 11557"
+  },
+  "vaad-burger-spot": {
+    "name": "Burger Spot",
+    "address": "560A Central Ave, Cedarhurst, NY 11516"
+  },
+  "vaad-capri": {
+    "name": "Capri",
+    "address": "1047 Broadway, Woodmere, NY 11598"
+  },
+  "wellness-five-towns-premier": {
+    "name": "Five Towns Premier Rehabilitation & Nursing",
+    "address": "1050 Central Ave, Woodmere"
+  }
+}
+

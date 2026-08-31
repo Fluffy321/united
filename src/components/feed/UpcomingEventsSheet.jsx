@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Bookmark, Calendar, Clock, MapPin, MessageCircle, Users, Search, X } from 'lucide-react';
 import { format, isPast, parseISO } from 'date-fns';
 import { COMMUNITIES_ENABLED } from '@/config/features';
@@ -84,6 +84,9 @@ export default function UpcomingEventsSheet({ open, onOpenChange, currentUser, j
             <Calendar className="w-5 h-5 text-blue-600" />
             Upcoming Events
           </SheetTitle>
+          <SheetDescription className="sr-only">
+            Browse real events shared across JUnited.
+          </SheetDescription>
           {/* Search bar */}
           <div className="relative mt-2">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />

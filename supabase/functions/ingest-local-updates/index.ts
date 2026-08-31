@@ -1,4 +1,8 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import {
+  buildAutomatedPost,
+  selectAutoPublishCandidates,
+} from './local-update-policy.js';
 
 type LocalUpdateSource = {
   id: string;
@@ -18,6 +22,11 @@ type ParsedUpdate = {
   short_description: string | null;
   category: string | null;
   raw_payload: Record<string, unknown>;
+};
+
+type InsertedLocalUpdate = ParsedUpdate & {
+  id: string;
+  source_name: string;
 };
 
 const JSON_HEADERS = {
@@ -310,8 +319,9 @@ Deno.serve(async (request) => {
   const summary = {
     sources_checked: 0,
     new_items_inserted: 0,
+    items_auto_published: 0,
     duplicates_skipped: 0,
-    errors: [] as Array<{ source_id: string; name: string; error: string }>,
+    errors: [] as Array<{ source_id: string; name: string; item_id?: string; error: string }>,
   };
 
   for (const source of (sources || []) as LocalUpdateSource[]) {
@@ -331,7 +341,7 @@ Deno.serve(async (request) => {
           short_description: item.short_description,
           category: item.category || source.category,
           raw_payload: item.raw_payload,
-          status: source.auto_publish ? 'pending' : 'pending',
+          status: 'pending',
         }));
 
         const { data: inserted, error: insertError } = await supabase
@@ -340,13 +350,80 @@ Deno.serve(async (request) => {
             onConflict: 'source_id,external_key',
             ignoreDuplicates: true,
           })
-          .select('id');
+          .select('id, external_key, source_url, title, source_name, source_published_at, short_description, category, raw_payload');
 
         if (insertError) throw insertError;
 
         const insertedCount = inserted?.length || 0;
         summary.new_items_inserted += insertedCount;
         summary.duplicates_skipped += Math.max(0, rows.length - insertedCount);
+
+        if (source.auto_publish && insertedCount > 0) {
+          const { data: community, error: communityError } = await supabase
+            .from('communities')
+            .select('id, name, logo_url')
+            .eq('id', source.community_id)
+            .single();
+
+          if (communityError || !community) {
+            throw communityError || new Error('Source community was not found');
+          }
+
+          const candidates = selectAutoPublishCandidates(
+            (inserted || []) as InsertedLocalUpdate[],
+            new Date(),
+          );
+
+          for (const item of candidates) {
+            try {
+              const publishedAt = new Date().toISOString();
+              const post = buildAutomatedPost(item, community, new Date(publishedAt));
+              const { data: existingPost, error: existingPostError } = await supabase
+                .from('posts')
+                .select('id')
+                .eq('migrated_from', post.migrated_from)
+                .maybeSingle();
+
+              if (existingPostError) throw existingPostError;
+
+              let publishedPost = existingPost;
+              if (!publishedPost) {
+                const { data: insertedPost, error: publishError } = await supabase
+                  .from('posts')
+                  .insert(post)
+                  .select('id')
+                  .single();
+
+                if (publishError) throw publishError;
+                publishedPost = insertedPost;
+              }
+
+              if (!publishedPost?.id) {
+                throw new Error('Automatic post creation returned no ID');
+              }
+
+              const { error: itemUpdateError } = await supabase
+                .from('local_update_items')
+                .update({
+                  status: 'published',
+                  approved_at: publishedAt,
+                  published_post_id: publishedPost.id,
+                })
+                .eq('id', item.id)
+                .eq('status', 'pending');
+
+              if (itemUpdateError) throw itemUpdateError;
+              summary.items_auto_published += 1;
+            } catch (error) {
+              summary.errors.push({
+                source_id: source.id,
+                name: source.name,
+                item_id: item.id,
+                error: error instanceof Error ? error.message : String(error),
+              });
+            }
+          }
+        }
       }
 
       await supabase

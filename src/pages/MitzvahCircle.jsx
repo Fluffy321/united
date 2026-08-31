@@ -93,10 +93,8 @@ export default function MitzvahCircle() {
     if (activeView !== 'browse') changeView('browse');
   };
 
-  const openRequestForm = (defaults = null, direction = 'need') => {
-    setRequestDefaults(defaults);
-    setRequestDirection(direction);
-    setShowCreate(true);
+  const openRequestForm = (_defaults = null, direction = 'need') => {
+    navigate(direction === 'offer' ? '/Publish?type=help_offer' : '/Publish?type=help_need');
   };
 
   const openRequestOnMap = (request) => {
@@ -519,8 +517,8 @@ export default function MitzvahCircle() {
               loadingRequests={loadingRequests}
               browseRequests={browseRequests}
               onQuickView={setQuickViewRequest}
-              onPostNeed={() => openRequestForm(null, 'need')}
-              onPostOffer={() => openRequestForm(null, 'offer')}
+              onPostNeed={() => navigate('/Publish?type=help_need')}
+              onPostOffer={() => navigate('/Publish?type=help_offer')}
             />
           )}
 
