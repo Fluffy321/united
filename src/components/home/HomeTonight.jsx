@@ -14,6 +14,7 @@ export default function HomeTonight({
   window = { mode: 'empty', items: [] },
   isLoading = false,
   isError = false,
+  embedded = false,
   onRetry,
   onOpenEvent,
   onOpenAll,
@@ -22,8 +23,8 @@ export default function HomeTonight({
   const title = window.mode === 'tonight' ? 'Happening tonight' : window.mode === 'upcoming' ? 'Coming up' : 'What’s happening';
 
   return (
-    <section className="space-y-2.5" aria-labelledby="home-events-title">
-      <div className="flex items-end justify-between gap-3 px-0.5">
+    <section className="space-y-2.5" aria-labelledby={embedded ? undefined : 'home-events-title'} aria-label={embedded ? 'Local plans' : undefined}>
+      {!embedded && <div className="flex items-end justify-between gap-3 px-0.5">
         <div>
           <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-600">Real local plans</p>
           <h2 id="home-events-title" className="mt-0.5 text-[20px] font-black tracking-[-0.045em] text-[#101A2E]">{title}</h2>
@@ -32,7 +33,7 @@ export default function HomeTonight({
           <button type="button" aria-label="Add an event" onClick={onAddEvent} className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-100 text-orange-700"><CalendarPlus className="h-4 w-4" /></button>
           <button type="button" aria-label="See all events" onClick={onOpenAll} className="min-h-11 px-1 text-[11px] font-black text-[#2861E8]">See all</button>
         </div>
-      </div>
+      </div>}
 
       {isLoading ? (
         <div className="h-[118px] animate-pulse rounded-[23px] bg-slate-200/70" aria-label="Loading events" />

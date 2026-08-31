@@ -36,4 +36,15 @@ describe('HomeCircleActivity', () => {
     expect(none).toContain('Find people and groups that fit you');
     expect(none).toContain('Browse communities');
   });
+
+  it('can render inside a shared People and plans section without another heading', () => {
+    const html = renderToStaticMarkup(<HomeCircleActivity embedded activity={{
+      active: [],
+      quiet: [{ community: { id: 'c1', name: 'Parents' }, href: '/Communities?community=c1' }],
+    }} />);
+
+    expect(html).toContain('Parents');
+    expect(html).not.toContain('From your circles');
+    expect(html).not.toContain('Browse all circles');
+  });
 });

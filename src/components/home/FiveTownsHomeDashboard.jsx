@@ -20,8 +20,7 @@ import FiveTownsDailyPanel from './FiveTownsDailyPanel';
 import FeaturedPlaceCard from './FeaturedPlaceCard';
 import HomePreferenceReason from './HomePreferenceReason';
 import HomeSectionHeading from './HomeSectionHeading';
-import HomeCircleActivity from './HomeCircleActivity';
-import HomeTonight from './HomeTonight';
+import HomePeopleAndPlans from './HomePeopleAndPlans';
 import UsefulNearbyCard from './UsefulNearbyCard';
 import {
   DIRECTORY_GROUPS,
@@ -251,20 +250,17 @@ export default function FiveTownsHomeDashboard({
           </div>
         </section>
 
-        <HomeCircleActivity
+        <HomePeopleAndPlans
           activity={circleActivity}
-          isLoading={isLoading}
+          eventWindow={eventWindow}
+          circlesLoading={isLoading}
+          eventsLoading={eventsLoading}
+          eventsError={eventsError}
           onOpenCommunity={(item) => navigate(item.href)}
           onBrowseCommunities={() => navigate('/Communities')}
-        />
-
-        <HomeTonight
-          window={eventWindow}
-          isLoading={eventsLoading}
-          isError={eventsError}
-          onRetry={onRetryEvents}
+          onRetryEvents={onRetryEvents}
           onOpenEvent={onOpenEvent}
-          onOpenAll={onOpenEvents}
+          onOpenEvents={onOpenEvents}
           onAddEvent={onAddEvent}
         />
       </div>

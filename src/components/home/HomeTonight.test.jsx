@@ -42,4 +42,15 @@ describe('HomeTonight', () => {
     expect(error).toContain('Events could not load');
     expect(error).toContain('aria-label="Retry events"');
   });
+
+  it('can render inside a shared People and plans section without another heading', () => {
+    const html = renderToStaticMarkup(<HomeTonight embedded window={{
+      mode: 'tonight',
+      items: [{ id: 'e1', title: 'Community shiur', event_time: '8:00 PM' }],
+    }} />);
+
+    expect(html).toContain('Community shiur');
+    expect(html).not.toContain('Happening tonight');
+    expect(html).not.toContain('See all events');
+  });
 });

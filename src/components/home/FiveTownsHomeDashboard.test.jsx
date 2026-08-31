@@ -49,15 +49,15 @@ describe('FiveTownsHomeDashboard', () => {
     expect(html).toContain('Less like this');
     expect(html).toContain('Hide this subject');
     expect(html).not.toContain('You asked for more like this');
-    expect(html).toContain('From your circles');
+    expect(html).toContain('People and plans');
     expect(html).toContain('Circle update');
-    expect(html).toContain('Happening tonight');
     expect(html).toContain('Community shiur');
     expect(html.indexOf('Today at a glance')).toBeLessThan(html.indexOf('Find something'));
     expect(html.indexOf('Find something')).toBeLessThan(html.indexOf('Worth knowing nearby'));
     expect(html.indexOf('Worth knowing nearby')).toBeLessThan(html.indexOf('Useful nearby'));
-    expect(html.indexOf('Useful nearby')).toBeLessThan(html.indexOf('From your circles'));
-    expect(html.indexOf('From your circles')).toBeLessThan(html.indexOf('Happening tonight'));
+    expect(html.indexOf('Useful nearby')).toBeLessThan(html.indexOf('People and plans'));
+    expect(html).not.toContain('From your circles');
+    expect(html).not.toContain('Happening tonight');
     expect(html).not.toContain('Your city today');
     expect(html).not.toContain('People and groups');
     expect(html).not.toContain('Opportunities');
@@ -71,8 +71,9 @@ describe('FiveTownsHomeDashboard', () => {
       <FiveTownsHomeDashboard posts={[]} communityGroups={[]} dailyInfo={dailyInfo} />,
     );
 
-    expect(html).toContain('No events posted yet');
+    expect(html).toContain('Nothing new here yet');
     expect(html).toContain('Browse communities');
+    expect(html).toContain('Add an event');
     expect(html).not.toContain('people interested');
     expect(html).not.toContain('Happening tonight');
     expect(html).not.toContain('random ride');

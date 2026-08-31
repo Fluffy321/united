@@ -5,6 +5,7 @@ import { feedText, formatPostAge, postDate } from '@/lib/feed/feedRanking';
 export default function HomeCircleActivity({
   activity = { active: [], quiet: [] },
   isLoading = false,
+  embedded = false,
   onOpenCommunity,
   onBrowseCommunities,
 }) {
@@ -13,8 +14,8 @@ export default function HomeCircleActivity({
   const cards = active.length ? active : quiet;
 
   return (
-    <section className="space-y-2.5" aria-labelledby="home-circles-title">
-      <div className="flex items-end justify-between gap-3 px-0.5">
+    <section className="space-y-2.5" aria-labelledby={embedded ? undefined : 'home-circles-title'} aria-label={embedded ? 'Circle activity' : undefined}>
+      {!embedded && <div className="flex items-end justify-between gap-3 px-0.5">
         <div>
           <p className="text-[9px] font-black uppercase tracking-[0.16em] text-violet-600">People you chose</p>
           <h2 id="home-circles-title" className="mt-0.5 text-[20px] font-black tracking-[-0.045em] text-[#101A2E]">From your circles</h2>
@@ -27,7 +28,7 @@ export default function HomeCircleActivity({
         >
           All circles
         </button>
-      </div>
+      </div>}
 
       {isLoading ? (
         <div className="flex gap-2.5 overflow-hidden" aria-label="Loading circle activity">
