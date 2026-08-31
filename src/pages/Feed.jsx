@@ -26,7 +26,7 @@ import FeedPreferenceSetup from '@/components/feed/FeedPreferenceSetup';
 import { usePullToRefresh } from '@/lib/usePullToRefresh';
 import useFiveTownsDaily from '@/hooks/useFiveTownsDaily';
 
-import { filterBlock, filterUserCommunity, getCommunity, getUnifiedPost } from '@/services/entityServices';
+import { filterBlock, filterUnifiedPost, filterUserCommunity, getCommunity, getUnifiedPost } from '@/services/entityServices';
 import { FEED_LOAD_TIMEOUT_MS, feedText, getPostLivePriority } from '@/lib/feed/feedRanking';
 import { feedPreferenceKeys, postKeys } from '@/lib/queryKeys';
 import { DEFAULT_BRIEF_CATEGORY_IDS, getBriefCategory } from '@/lib/feed/briefCategories';
@@ -91,7 +91,7 @@ export default function Feed() {
       .catch(() => setPublishedBrief(null));
   }, [primaryNetwork.cityPreset]);
 
-  const { posts, isLoading, isError, refetch } = useFeedData();
+  const { posts, isLoading, refetch } = useFeedData();
   const dailyInfo = useFiveTownsDaily();
   const { isRefreshing, pullDistance } = usePullToRefresh(refetch);
   const { data: briefPreferences = null, isFetched: briefPreferencesFetched } = useQuery({
@@ -104,6 +104,17 @@ export default function Feed() {
     queryKey: feedPreferenceKeys.signals(currentUser?.id),
     queryFn: () => feedRetentionService.getCategorySignals(currentUser.id),
     enabled: Boolean(currentUser?.id && appParams.hasBackendConfig),
+    staleTime: 60_000,
+  });
+  const {
+    data: homeEvents = [],
+    isLoading: homeEventsLoading,
+    isError: homeEventsError,
+    refetch: refetchHomeEvents,
+  } = useQuery({
+    queryKey: ['home-events', primaryNetwork.cityPreset || 'Five Towns'],
+    queryFn: () => filterUnifiedPost({ type: 'event' }, '-event_date', 60),
+    enabled: appParams.hasBackendConfig,
     staleTime: 60_000,
   });
 
@@ -488,7 +499,7 @@ export default function Feed() {
                   activeTab={activeBriefTab}
                   onTabChange={setActiveBriefTab}
                   onBack={handleCloseBriefCategory}
-                  onOpenPost={(post) => navigate(`/PostDetail?id=${post.id}`)}
+                  onOpenPost={handleCardOpen}
                   onOpenDirectory={() => navigate('/Map')}
                   onAction={handleBriefAction}
                 />
@@ -504,13 +515,16 @@ export default function Feed() {
               currentUser={currentUser}
               posts={rankedBriefItems}
               communityGroups={communityGroups}
+              events={homeEvents}
               isLoading={isLoading && !loadTimedOut}
-              isError={isError}
-              onRetry={refetch}
-              onOpenPost={handleCardOpen}
+              eventsLoading={homeEventsLoading}
+              eventsError={homeEventsError}
+              onRetryEvents={refetchHomeEvents}
+              onOpenEvent={(event) => setReplyPost(event)}
+              onOpenEvents={() => setShowEventsSheet(true)}
+              onAddEvent={() => navigate('/Publish?type=event')}
               onOpenLocation={() => setShowLocationPicker(true)}
               onNavigate={navigate}
-              onPublish={() => openComposer({ type: 'feed' })}
               onOpenCalendar={() => setShowCalendarSheet(true)}
               onOpenMessages={() => navigate('/Messages')}
               onOpenNotifications={() => navigate('/Notifications')}

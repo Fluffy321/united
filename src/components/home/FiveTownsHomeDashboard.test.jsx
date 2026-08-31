@@ -1,9 +1,11 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import FiveTownsHomeDashboard from './FiveTownsHomeDashboard';
 
 describe('FiveTownsHomeDashboard', () => {
+  afterEach(() => vi.useRealTimers());
+
   const dailyInfo = {
     weather: { status: 'ready', data: { temperature: 75, condition: 'Partly cloudy' } },
     jewishTimes: { status: 'ready', data: {
@@ -15,12 +17,15 @@ describe('FiveTownsHomeDashboard', () => {
     traffic: { status: 'unavailable', incidents: [], sourceUrl: 'https://511ny.org/' },
   };
 
-  it('renders the approved complete dashboard hierarchy', () => {
+  it('keeps the approved top and ends with real circles followed by tonight', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-31T22:00:00Z'));
     const html = renderToStaticMarkup(
       <FiveTownsHomeDashboard
         currentUser={{ first_name: 'Aryeh' }}
-        posts={[]}
-        communityGroups={[]}
+        posts={[{ id: 'p1', community_id: 'c1', body: 'Circle update', created_date: '2026-08-31T20:00:00Z' }]}
+        communityGroups={[{ id: 'c1', name: 'Five Towns 20s' }]}
+        events={[{ id: 'e1', type: 'event', title: 'Community shiur', event_date: '2026-08-31', event_time: '8:00 PM' }]}
         dailyInfo={dailyInfo}
       />,
     );
@@ -37,12 +42,18 @@ describe('FiveTownsHomeDashboard', () => {
     expect(html).toContain('Make a full afternoon');
     expect(html).toContain('Go out tonight');
     expect(html).toContain('Guests are visiting');
-    expect(html).toContain('Your city today');
-    expect(html).toContain('People and groups');
-    expect(html).toContain('Jewish life');
-    expect(html).toContain('Opportunities');
-    expect(html).toContain('Help nearby');
-    expect(html).toContain('Complete Jewish directory');
+    expect(html).toContain('From your circles');
+    expect(html).toContain('Circle update');
+    expect(html).toContain('Happening tonight');
+    expect(html).toContain('Community shiur');
+    expect(html.indexOf('Useful nearby')).toBeLessThan(html.indexOf('From your circles'));
+    expect(html.indexOf('From your circles')).toBeLessThan(html.indexOf('Happening tonight'));
+    expect(html).not.toContain('Your city today');
+    expect(html).not.toContain('People and groups');
+    expect(html).not.toContain('Opportunities');
+    expect(html).not.toContain('Help nearby');
+    expect(html).not.toContain('Complete Jewish directory');
+    expect(html).not.toContain('Add something useful');
   });
 
   it('does not invent activity when there are no real posts or groups', () => {
@@ -50,10 +61,10 @@ describe('FiveTownsHomeDashboard', () => {
       <FiveTownsHomeDashboard posts={[]} communityGroups={[]} dailyInfo={dailyInfo} />,
     );
 
-    expect(html).toContain('No new local updates right now');
+    expect(html).toContain('No events posted yet');
     expect(html).toContain('Browse communities');
     expect(html).not.toContain('people interested');
-    expect(html).not.toContain('HAPPENING TONIGHT');
+    expect(html).not.toContain('Happening tonight');
     expect(html).not.toContain('random ride');
   });
 });

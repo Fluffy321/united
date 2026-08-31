@@ -62,4 +62,13 @@ describe('Mobile headquarters Feed contract', () => {
     expect(source).not.toContain('feedSourcePosts');
     expect(source).toContain('const visiblePosts = posts.filter');
   });
+
+  it('loads real events and wires every new Home action to a registered destination', () => {
+    expect(source).toContain("filterUnifiedPost({ type: 'event' }, '-event_date', 60)");
+    expect(source).toContain('events={homeEvents}');
+    expect(source).toContain('onOpenEvents={() => setShowEventsSheet(true)}');
+    expect(source).toContain("onAddEvent={() => navigate('/Publish?type=event')}");
+    expect(source).toContain('onOpenEvent={(event) => setReplyPost(event)}');
+    expect(source).not.toContain('`/communities/${group.id}`');
+  });
 });

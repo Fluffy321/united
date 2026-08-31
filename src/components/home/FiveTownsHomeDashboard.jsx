@@ -1,15 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  ArrowRight,
   Baby,
   Bell,
-  BookOpen,
   BriefcaseBusiness,
   Building2,
   CalendarDays,
-  ChevronRight,
-  HeartHandshake,
   HeartPulse,
   MapPin,
   MessageCircle,
@@ -17,20 +13,20 @@ import {
   ShoppingBag,
   Sparkles,
   Star,
-  Store,
   Utensils,
-  Users,
 } from 'lucide-react';
 import FiveTownsDirectory from './FiveTownsDirectory';
 import FiveTownsDailyPanel from './FiveTownsDailyPanel';
 import FeaturedPlaceCard from './FeaturedPlaceCard';
+import HomeCircleActivity from './HomeCircleActivity';
+import HomeTonight from './HomeTonight';
 import UsefulNearbyCard from './UsefulNearbyCard';
 import {
   DIRECTORY_GROUPS,
   FIVE_TOWNS_LISTINGS,
   featuredDirectoryListings,
 } from '@/lib/directory/fiveTownsDirectory';
-import { feedText } from '@/lib/feed/feedRanking';
+import { buildCircleActivity, buildHomeEventWindow } from '@/lib/home/homeActivity';
 
 const GROUP_ICONS = {
   'jewish-life': Star,
@@ -72,51 +68,20 @@ function SectionHeading({ title, action, onAction }) {
   );
 }
 
-function ActionRow({ icon: Icon, title, detail, onClick, tone = 'bg-[#EEF3FF] text-[#275FDF]' }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex min-h-[72px] w-full items-center gap-3 rounded-[20px] border border-slate-200/90 bg-white px-3.5 py-3 text-left shadow-[0_8px_24px_rgba(15,28,46,0.045)] active:scale-[0.99]"
-    >
-      <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${tone}`}>
-        <Icon className="h-5 w-5" />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-[14px] font-black leading-tight tracking-[-0.015em] text-slate-900">{title}</span>
-        <span className="mt-1 block text-[11px] font-semibold leading-snug text-slate-500">{detail}</span>
-      </span>
-      <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
-    </button>
-  );
-}
-
-function SmallCard({ icon: Icon, eyebrow, title, detail, onClick, tone = 'bg-[#EEF3FF] text-[#275FDF]' }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="min-h-[126px] rounded-[22px] border border-slate-200/90 bg-white p-3.5 text-left shadow-[0_8px_24px_rgba(15,28,46,0.045)] active:scale-[0.98]"
-    >
-      <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${tone}`}><Icon className="h-[18px] w-[18px]" /></span>
-      {eyebrow && <span className="mt-3 block text-[9px] font-black uppercase tracking-[0.13em] text-[#2861E8]">{eyebrow}</span>}
-      <span className={`${eyebrow ? 'mt-1' : 'mt-3'} block text-[13px] font-black leading-tight tracking-[-0.02em] text-slate-900`}>{title}</span>
-      <span className="mt-1 block text-[10px] font-semibold leading-snug text-slate-500">{detail}</span>
-    </button>
-  );
-}
-
 export default function FiveTownsHomeDashboard({
   currentUser,
   posts = [],
   communityGroups = [],
+  events = [],
   isLoading = false,
-  isError = false,
-  onRetry,
-  onOpenPost,
+  eventsLoading = false,
+  eventsError = false,
+  onRetryEvents,
+  onOpenEvent,
+  onOpenEvents,
+  onAddEvent,
   onOpenLocation,
   onNavigate,
-  onPublish,
   onOpenCalendar,
   onOpenMessages,
   onOpenNotifications,
@@ -180,7 +145,11 @@ export default function FiveTownsHomeDashboard({
     };
   }), []);
 
-  const livePosts = posts.slice(0, 3);
+  const circleActivity = useMemo(() => buildCircleActivity({
+    communities: communityGroups,
+    posts,
+  }), [communityGroups, posts]);
+  const eventWindow = useMemo(() => buildHomeEventWindow({ events }), [events]);
   const openDirectory = (groupId = '', listingId = '') => setDirectoryState({ groupId, listingId });
   const navigate = (path) => onNavigate?.(path);
 
@@ -249,63 +218,22 @@ export default function FiveTownsHomeDashboard({
           </div>
         </section>
 
-        <section className="space-y-2.5">
-          <SectionHeading title="Your city today" action="See all" onAction={() => navigate('/Feed?brief=1')} />
-          {isLoading && <div className="h-20 animate-pulse rounded-[20px] bg-slate-200/70" />}
-          {isError && !livePosts.length && (
-            <ActionRow icon={Bell} title="Updates could not load" detail="Tap to try again" onClick={onRetry} />
-          )}
-          {!isLoading && !livePosts.length && !isError && (
-            <ActionRow icon={Bell} title="No new local updates right now" detail="The directory and city tools are still ready" onClick={() => openDirectory('')} />
-          )}
-          {livePosts.map((post) => (
-            <ActionRow key={post.id} icon={Bell} title={feedText(post)} detail={post.location_text || post.source_name || 'Five Towns update'} onClick={() => onOpenPost?.(post)} />
-          ))}
-        </section>
+        <HomeCircleActivity
+          activity={circleActivity}
+          isLoading={isLoading}
+          onOpenCommunity={(item) => navigate(item.href)}
+          onBrowseCommunities={() => navigate('/Communities')}
+        />
 
-        <section className="space-y-2.5">
-          <SectionHeading title="People and groups" action="Browse communities" onAction={() => navigate('/Communities')} />
-          {communityGroups.length ? communityGroups.slice(0, 2).map((group) => (
-            <ActionRow key={group.id} icon={Users} title={group.name} detail={group.type || 'Joined community'} onClick={() => navigate(`/communities/${group.id}`)} tone="bg-violet-50 text-violet-700" />
-          )) : (
-            <ActionRow icon={Users} title="Browse communities" detail="Find real local groups when you are ready" onClick={() => navigate('/Communities')} tone="bg-violet-50 text-violet-700" />
-          )}
-        </section>
-
-        <section className="space-y-2.5">
-          <SectionHeading title="Jewish life" action="Open Jewish life" onAction={() => openDirectory('jewish-life')} />
-          <ActionRow icon={Star} title={`${counts['jewish-life']} shuls, mikvahs, and learning resources`} detail="Addresses, public sources, and navigation" onClick={() => openDirectory('jewish-life')} tone={GROUP_TONES['jewish-life']} />
-          <ActionRow icon={BookOpen} title="Jewish calendar and zmanim" detail="Open today’s times and calendar" onClick={onOpenCalendar} tone="bg-amber-50 text-amber-700" />
-        </section>
-
-        <section className="space-y-2.5">
-          <SectionHeading title="Opportunities" action="Explore" onAction={() => navigate('/Marketplace')} />
-          <ActionRow icon={BriefcaseBusiness} title="Jobs and business connections" detail="Browse live opportunities posted in JUnited" onClick={() => navigate('/Marketplace')} tone="bg-sky-50 text-sky-700" />
-          <ActionRow icon={Store} title="Local professional services" detail={`${counts.services} sourced Five Towns options`} onClick={() => openDirectory('services')} tone={GROUP_TONES.services} />
-        </section>
-
-        <section className="space-y-2.5">
-          <SectionHeading title="Help nearby" action="Open Help" onAction={() => navigate('/MitzvahCircle')} />
-          <ActionRow icon={HeartHandshake} title="Ask for help or offer it" detail="See real needs and offers in your area" onClick={() => navigate('/MitzvahCircle')} tone="bg-emerald-50 text-emerald-700" />
-        </section>
-
-        <section className="space-y-2.5">
-          <SectionHeading title="Complete Jewish directory" action="Open everything" onAction={() => openDirectory('')} />
-          <div className="grid grid-cols-2 gap-2.5">
-            <SmallCard icon={Star} eyebrow="Jewish life" title="Shuls and minyanim" detail="Sources and directions" onClick={() => openDirectory('jewish-life')} tone={GROUP_TONES['jewish-life']} />
-            <SmallCard icon={Baby} eyebrow="Families" title="Schools and camps" detail="Browse by town" onClick={() => openDirectory('family')} tone={GROUP_TONES.family} />
-            <SmallCard icon={HeartPulse} eyebrow="Health" title="Doctors and wellness" detail="Local sourced listings" onClick={() => openDirectory('health')} tone={GROUP_TONES.health} />
-            <SmallCard icon={Sparkles} eyebrow="Things to do" title="Activities nearby" detail="Options around the Five Towns" onClick={() => openDirectory('things-to-do')} tone={GROUP_TONES['things-to-do']} />
-          </div>
-          <div className="flex items-center gap-2 rounded-2xl bg-emerald-50 px-3.5 py-3 text-[10px] font-bold leading-snug text-emerald-800">
-            <Star className="h-4 w-4 shrink-0" /> Sources are shown. Addresses can be corrected.
-          </div>
-        </section>
-
-        <button type="button" onClick={onPublish} className="flex min-h-14 w-full items-center justify-between rounded-[20px] bg-blue-600 px-5 text-left text-white shadow-[0_12px_28px_rgba(37,99,235,0.22)]">
-          <span><strong className="block text-[14px] font-black">Add something useful</strong><span className="mt-0.5 block text-[10px] font-semibold text-slate-300">Post an update, event, offer, or request</span></span>
-          <ArrowRight className="h-5 w-5" />
-        </button>
+        <HomeTonight
+          window={eventWindow}
+          isLoading={eventsLoading}
+          isError={eventsError}
+          onRetry={onRetryEvents}
+          onOpenEvent={onOpenEvent}
+          onOpenAll={onOpenEvents}
+          onAddEvent={onAddEvent}
+        />
       </div>
 
       {directoryState !== null && typeof document !== 'undefined' && createPortal(
