@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Baby,
@@ -18,6 +18,7 @@ import {
 import FiveTownsDirectory from './FiveTownsDirectory';
 import FiveTownsDailyPanel from './FiveTownsDailyPanel';
 import FeaturedPlaceCard from './FeaturedPlaceCard';
+import HomePreferenceReason from './HomePreferenceReason';
 import HomeSectionHeading from './HomeSectionHeading';
 import HomeCircleActivity from './HomeCircleActivity';
 import HomeTonight from './HomeTonight';
@@ -28,6 +29,13 @@ import {
   featuredDirectoryListings,
 } from '@/lib/directory/fiveTownsDirectory';
 import { buildCircleActivity, buildHomeEventWindow } from '@/lib/home/homeActivity';
+import {
+  homePlaceReason,
+  loadHomePlacePreferences,
+  rankHomeListings,
+  saveHomePlacePreferences,
+  updateHomePlacePreference,
+} from '@/lib/home/homePlacePreferences';
 
 const GROUP_ICONS = {
   'jewish-life': Star,
@@ -80,17 +88,26 @@ export default function FiveTownsHomeDashboard({
   dailyInfo = {},
 }) {
   const [directoryState, setDirectoryState] = useState(null);
+  const [placePreferences, setPlacePreferences] = useState(() => loadHomePlacePreferences(currentUser?.id));
+
+  useEffect(() => {
+    setPlacePreferences(loadHomePlacePreferences(currentUser?.id));
+  }, [currentUser?.id]);
 
   const counts = useMemo(() => DIRECTORY_GROUPS.reduce((result, group) => ({
     ...result,
     [group.id]: FIVE_TOWNS_LISTINGS.filter((listing) => listing.groupId === group.id).length,
   }), {}), []);
 
-  const featuredListings = useMemo(() => featuredDirectoryListings(FIVE_TOWNS_LISTINGS, { limit: 100 })
+  const featuredListingsBase = useMemo(() => featuredDirectoryListings(FIVE_TOWNS_LISTINGS, { limit: 100 })
     .sort((left, right) => Number(Boolean(right.imageUrl)) - Number(Boolean(left.imageUrl)))
     .slice(0, 8), []);
+  const featuredListings = useMemo(
+    () => rankHomeListings(featuredListingsBase, placePreferences),
+    [featuredListingsBase, placePreferences],
+  );
 
-  const usefulNearby = useMemo(() => [
+  const usefulNearbyBase = useMemo(() => [
     {
       title: 'Get the kids out',
       detail: 'Parks, pools, activities, and family plans',
@@ -135,6 +152,10 @@ export default function FiveTownsHomeDashboard({
       imageUrl: matches.find((listing) => listing.imageUrl)?.imageUrl || '',
     };
   }), []);
+  const usefulNearby = useMemo(
+    () => rankHomeListings(usefulNearbyBase, placePreferences),
+    [usefulNearbyBase, placePreferences],
+  );
 
   const circleActivity = useMemo(() => buildCircleActivity({
     communities: communityGroups,
@@ -143,6 +164,12 @@ export default function FiveTownsHomeDashboard({
   const eventWindow = useMemo(() => buildHomeEventWindow({ events }), [events]);
   const openDirectory = (groupId = '', listingId = '') => setDirectoryState({ groupId, listingId });
   const navigate = (path) => onNavigate?.(path);
+  const updatePlacePreference = (groupId, action) => {
+    setPlacePreferences((value) => {
+      const next = updateHomePlacePreference(value, groupId, action);
+      return saveHomePlacePreferences(currentUser?.id, next);
+    });
+  };
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-md bg-[#F5F7FB] pb-[calc(104px+env(safe-area-inset-bottom))] text-[#101A2E]">
@@ -198,7 +225,13 @@ export default function FiveTownsHomeDashboard({
           <HomeSectionHeading eyebrow="Close to you" title="Worth knowing nearby" action="See all" onAction={() => openDirectory('')} titleId="home-nearby-title" />
           <div className="-mx-3.5 flex snap-x gap-2.5 overflow-x-auto px-3.5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {featuredListings.map((listing) => (
-              <div key={listing.id} className="snap-start"><FeaturedPlaceCard listing={listing} onOpen={() => openDirectory(listing.groupId, listing.id)} /></div>
+              <div key={listing.id} className="snap-start">
+                <FeaturedPlaceCard listing={listing} onOpen={() => openDirectory(listing.groupId, listing.id)} />
+                <HomePreferenceReason
+                  reason={homePlaceReason(placePreferences, listing.groupId)}
+                  onPreference={(action) => updatePlacePreference(listing.groupId, action)}
+                />
+              </div>
             ))}
           </div>
         </section>
@@ -207,7 +240,13 @@ export default function FiveTownsHomeDashboard({
           <HomeSectionHeading eyebrow="Pick a mood" title="Useful nearby" action="Everything" onAction={() => openDirectory('')} titleId="home-useful-title" />
           <div className="-mx-3.5 flex snap-x gap-2.5 overflow-x-auto px-3.5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {usefulNearby.map((need) => (
-              <div key={need.title} className="snap-start"><UsefulNearbyCard {...need} onOpen={() => openDirectory(need.groupId)} /></div>
+              <div key={need.title} className="snap-start">
+                <UsefulNearbyCard {...need} onOpen={() => openDirectory(need.groupId)} />
+                <HomePreferenceReason
+                  reason={homePlaceReason(placePreferences, need.groupId)}
+                  onPreference={(action) => updatePlacePreference(need.groupId, action)}
+                />
+              </div>
             ))}
           </div>
         </section>

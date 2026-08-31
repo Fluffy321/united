@@ -45,6 +45,10 @@ describe('FiveTownsHomeDashboard', () => {
     expect(html).toContain('Make a full afternoon');
     expect(html).toContain('Go out tonight');
     expect(html).toContain('Guests are visiting');
+    expect(html).toContain('More like this');
+    expect(html).toContain('Less like this');
+    expect(html).toContain('Hide this subject');
+    expect(html).not.toContain('You asked for more like this');
     expect(html).toContain('From your circles');
     expect(html).toContain('Circle update');
     expect(html).toContain('Happening tonight');
