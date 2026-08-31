@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  Car,
-  CloudSun,
-  Flame,
-  MoonStar,
-  Sunrise,
-  TriangleAlert,
-} from 'lucide-react';
+import { ArrowUpRight, Car, TriangleAlert } from 'lucide-react';
 
 function formatTime(value) {
   if (!value) return '—';
@@ -19,47 +12,55 @@ function formatTime(value) {
   });
 }
 
-function UtilityCell({ icon: Icon, label, value, detail, tone = 'bg-blue-50 text-blue-700' }) {
+function DailyMetric({ label, value, detail }) {
   return (
-    <div className="flex min-h-[78px] min-w-0 gap-2.5 rounded-[18px] border border-slate-200/90 bg-white p-3">
-      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${tone}`}>
-        <Icon className="h-[17px] w-[17px]" />
-      </span>
-      <span className="min-w-0 pt-0.5">
-        <span className="block text-[9px] font-black uppercase tracking-[0.1em] text-slate-400">{label}</span>
-        <strong className="mt-1 block truncate text-[14px] font-black leading-none tracking-[-0.02em] text-slate-900">{value}</strong>
-        {detail && <span className="mt-1 block truncate text-[9px] font-semibold text-slate-500">{detail}</span>}
-      </span>
+    <div className="min-w-0 rounded-xl bg-white/[0.08] px-2 py-2.5 ring-1 ring-inset ring-white/[0.04]">
+      <strong className="block truncate text-[13px] font-black leading-none text-white">{value}</strong>
+      <span className="mt-1 block truncate text-[8px] font-black uppercase tracking-[0.08em] text-blue-100/70">{label}</span>
+      {detail && <span className="mt-1 block truncate text-[7px] font-semibold text-white/48">{detail}</span>}
     </div>
   );
 }
 
-function TrafficRow({ traffic }) {
+function trafficState(traffic) {
   const incidents = traffic?.incidents || traffic?.data?.incidents || [];
   if (traffic?.status === 'ready' && incidents.length) {
-    const first = incidents[0];
+    return { kind: 'incident', value: 'Alert', incidents, first: incidents[0] };
+  }
+  if (traffic?.status === 'empty') return { kind: 'empty', value: 'Clear', incidents: [] };
+  if (traffic?.status === 'loading') return { kind: 'loading', value: 'Checking', incidents: [] };
+  return { kind: 'unavailable', value: 'Unavailable', incidents: [] };
+}
+
+function TrafficSummary({ traffic, state }) {
+  const href = traffic?.sourceUrl || 'https://511ny.org/';
+  if (state.kind === 'incident') {
     return (
-      <a href={traffic.sourceUrl || 'https://511ny.org/'} target="_blank" rel="noreferrer" className="flex min-h-[58px] items-center gap-3 rounded-[18px] border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-left">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-700"><TriangleAlert className="h-[17px] w-[17px]" /></span>
-        <span className="min-w-0 flex-1"><strong className="block text-[12px] font-black text-rose-950">{first.description}</strong><span className="mt-0.5 block text-[9px] font-bold text-rose-700">{first.road || 'Nearby traffic alert'} · 511NY{incidents.length > 1 ? ` · +${incidents.length - 1} more` : ''}</span></span>
+      <a href={href} target="_blank" rel="noreferrer" className="mt-2.5 flex min-h-11 items-center gap-2.5 rounded-xl bg-rose-500/15 px-3 py-2 text-left ring-1 ring-inset ring-rose-300/20">
+        <TriangleAlert className="h-4 w-4 shrink-0 text-rose-300" />
+        <span className="min-w-0 flex-1">
+          <strong className="block truncate text-[10px] font-black text-white">{state.first.description || 'Nearby traffic alert'}</strong>
+          <span className="mt-0.5 block truncate text-[8px] font-bold text-rose-100/70">{state.first.road || 'Five Towns roads'} · 511NY{state.incidents.length > 1 ? ` · +${state.incidents.length - 1} more` : ''}</span>
+        </span>
+        <ArrowUpRight className="h-4 w-4 shrink-0 text-rose-200" />
       </a>
     );
   }
 
-  if (traffic?.status === 'loading') {
-    return (
-      <div className="flex min-h-[58px] items-center gap-3 rounded-[18px] border border-slate-200/90 bg-white px-3.5 py-2.5">
-        <span className="flex h-9 w-9 shrink-0 animate-pulse items-center justify-center rounded-xl bg-slate-100 text-slate-400"><Car className="h-[17px] w-[17px]" /></span>
-        <span><strong className="block text-[12px] font-black text-slate-900">Checking traffic</strong><span className="mt-0.5 block text-[9px] font-semibold text-slate-500">Looking for nearby 511NY incidents</span></span>
-      </div>
-    );
-  }
+  const copy = state.kind === 'empty'
+    ? ['No nearby incidents', 'Checked crashes, closures, and roadwork · 511NY']
+    : state.kind === 'loading'
+      ? ['Checking roads', 'Looking for nearby 511NY incidents']
+      : ['Roads unavailable', 'Open 511NY to check current conditions'];
 
-  const isVerifiedEmpty = traffic?.status === 'empty';
   return (
-    <a href={traffic?.sourceUrl || 'https://511ny.org/'} target="_blank" rel="noreferrer" className="flex min-h-[58px] items-center gap-3 rounded-[18px] border border-slate-200/90 bg-white px-3.5 py-2.5 text-left">
-      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${isVerifiedEmpty ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}><Car className="h-[17px] w-[17px]" /></span>
-      <span className="min-w-0 flex-1"><strong className="block text-[12px] font-black text-slate-900">{isVerifiedEmpty ? 'No nearby 511NY incidents' : 'Live traffic unavailable'}</strong><span className="mt-0.5 block text-[9px] font-semibold text-slate-500">{isVerifiedEmpty ? 'Checked crashes, closures, and roadwork' : 'Open 511NY to check current roads'}</span></span>
+    <a href={href} target="_blank" rel="noreferrer" className="mt-2.5 flex min-h-11 items-center gap-2.5 rounded-xl bg-white/[0.07] px-3 py-2 text-left ring-1 ring-inset ring-white/[0.05]">
+      <Car className={`h-4 w-4 shrink-0 ${state.kind === 'empty' ? 'text-emerald-300' : 'text-blue-200'}`} />
+      <span className="min-w-0 flex-1">
+        <strong className="block text-[10px] font-black text-white">{copy[0]}</strong>
+        <span className="mt-0.5 block truncate text-[8px] font-bold text-blue-100/60">{copy[1]}</span>
+      </span>
+      <ArrowUpRight className="h-4 w-4 shrink-0 text-blue-200/60" />
     </a>
   );
 }
@@ -69,50 +70,26 @@ export default function FiveTownsDailyPanel({ weather, jewishTimes, traffic }) {
   const weatherLoading = weather?.status === 'loading';
   const timesLoading = jewishTimes?.status === 'loading';
   const times = jewishTimes?.data || {};
+  const roads = trafficState(traffic);
+  const weatherValue = weatherReady ? `${weather.data.temperature}°` : weatherLoading ? 'Loading' : 'Unavailable';
+  const weatherDetail = weatherReady ? weather.data.condition : weatherLoading ? 'Loading weather' : 'Weather unavailable';
 
   return (
-    <section aria-labelledby="five-towns-today" className="space-y-2.5">
-      <div className="flex items-end justify-between px-0.5">
-        <div>
-          <span className="text-[9px] font-black uppercase tracking-[0.15em] text-[#2861E8]">Live utility</span>
-          <h1 id="five-towns-today" className="mt-0.5 text-[23px] font-black tracking-[-0.055em] text-[#101A2E]">Five Towns today</h1>
-        </div>
-        <span className="pb-1 text-[9px] font-bold text-slate-400">Official sources</span>
+    <section aria-labelledby="five-towns-today" className="rounded-[23px] bg-[#0A1A39] p-4 text-white shadow-[0_14px_30px_rgba(10,26,57,0.18)]">
+      <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#90AFFF]">Your day in Five Towns</p>
+      <div className="mt-1 flex items-end justify-between gap-3">
+        <h1 id="five-towns-today" className="text-[21px] font-black tracking-[-0.05em]">Today at a glance</h1>
+        <span className="pb-0.5 text-[8px] font-bold text-blue-100/55">Official sources</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <UtilityCell
-          icon={CloudSun}
-          label="Weather"
-          value={weatherReady ? `${weather.data.temperature}°` : weatherLoading ? 'Loading weather' : 'Weather unavailable'}
-          detail={weatherReady ? weather.data.condition : weatherLoading ? 'Getting local conditions' : 'Tap source to check'}
-          tone="bg-sky-50 text-sky-700"
-        />
-        <UtilityCell
-          icon={Flame}
-          label="Candle lighting"
-          value={timesLoading ? 'Checking times' : formatTime(times.candleLighting)}
-          detail="This coming Shabbat"
-          tone="bg-amber-50 text-amber-700"
-        />
-        <UtilityCell
-          icon={Sunrise}
-          label="Sunrise"
-          value={timesLoading ? 'Checking times' : formatTime(times.sunrise)}
-          detail={timesLoading ? 'Getting local solar times' : `Sunset ${formatTime(times.sunset)}`}
-          tone="bg-orange-50 text-orange-700"
-        />
-        <UtilityCell
-          icon={MoonStar}
-          label="Shabbat ends"
-          value={timesLoading ? 'Checking times' : formatTime(times.havdalah)}
-          detail="Hebcal local calculation"
-          tone="bg-indigo-50 text-indigo-700"
-        />
+      <div className="mt-3 grid grid-cols-4 gap-1.5">
+        <DailyMetric label="Weather" value={weatherValue} detail={weatherDetail} />
+        <DailyMetric label="Candle lighting" value={timesLoading ? 'Checking' : formatTime(times.candleLighting)} detail={timesLoading ? 'Checking times' : `Shabbat ends ${formatTime(times.havdalah)}`} />
+        <DailyMetric label="Sunset" value={timesLoading ? 'Checking' : formatTime(times.sunset)} detail={timesLoading ? 'Checking times' : `Sunrise ${formatTime(times.sunrise)}`} />
+        <DailyMetric label="Roads" value={roads.value} detail="511NY" />
       </div>
 
-      <TrafficRow traffic={traffic} />
-      <span className="sr-only">Sunset {formatTime(times.sunset)}</span>
+      <TrafficSummary traffic={traffic} state={roads} />
     </section>
   );
 }

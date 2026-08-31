@@ -32,14 +32,16 @@ describe('FiveTownsDailyPanel', () => {
       />,
     );
 
-    expect(html).toContain('Five Towns today');
+    expect(html).toContain('Your day in Five Towns');
+    expect(html).toContain('Today at a glance');
     expect(html).toContain('75°');
     expect(html).toContain('Partly cloudy');
     expect(html).toContain('Candle lighting');
     expect(html).toContain('Shabbat ends');
-    expect(html).toContain('Sunrise');
     expect(html).toContain('Sunset');
-    expect(html).toContain('No nearby 511NY incidents');
+    expect(html).toContain('Roads');
+    expect(html).toContain('No nearby incidents');
+    expect(html).toContain('511NY');
   });
 
   it('is honest when traffic is not connected', () => {
@@ -51,8 +53,9 @@ describe('FiveTownsDailyPanel', () => {
       />,
     );
 
-    expect(html).toContain('Live traffic unavailable');
-    expect(html).not.toContain('No nearby 511NY incidents');
+    expect(html).toContain('Roads unavailable');
+    expect(html).not.toContain('No nearby incidents');
+    expect(html).not.toContain('>Clear<');
   });
 
   it('keeps successful providers visible when another is unavailable', () => {
@@ -65,7 +68,7 @@ describe('FiveTownsDailyPanel', () => {
     );
 
     expect(html).toContain('Weather unavailable');
-    expect(html).toContain('Sunrise');
+    expect(html).toContain('Sunset');
     expect(html).toContain('Candle lighting');
   });
 
@@ -79,7 +82,7 @@ describe('FiveTownsDailyPanel', () => {
     );
     expect(html).toContain('Loading weather');
     expect(html).toContain('Checking times');
-    expect(html).toContain('Checking traffic');
-    expect(html).not.toContain('Live traffic unavailable');
+    expect(html).toContain('Checking roads');
+    expect(html).not.toContain('Roads unavailable');
   });
 });

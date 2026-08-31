@@ -30,7 +30,7 @@ describe('FiveTownsHomeDashboard', () => {
       />,
     );
 
-    expect(html).toContain('Five Towns today');
+    expect(html).toContain('Today at a glance');
     expect(html).toContain('75°');
     expect(html).not.toContain('Everything local, without the noise.');
     expect(html).toContain('Find anything Jewish nearby');
@@ -49,7 +49,7 @@ describe('FiveTownsHomeDashboard', () => {
     expect(html).toContain('Circle update');
     expect(html).toContain('Happening tonight');
     expect(html).toContain('Community shiur');
-    expect(html.indexOf('Five Towns today')).toBeLessThan(html.indexOf('Find something'));
+    expect(html.indexOf('Today at a glance')).toBeLessThan(html.indexOf('Find something'));
     expect(html.indexOf('Find something')).toBeLessThan(html.indexOf('Worth knowing nearby'));
     expect(html.indexOf('Worth knowing nearby')).toBeLessThan(html.indexOf('Useful nearby'));
     expect(html.indexOf('Useful nearby')).toBeLessThan(html.indexOf('From your circles'));
