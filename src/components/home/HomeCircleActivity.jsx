@@ -23,7 +23,7 @@ export default function HomeCircleActivity({
           type="button"
           aria-label="Browse all circles"
           onClick={onBrowseCommunities}
-          className="min-h-9 shrink-0 text-[11px] font-black text-[#2861E8]"
+          className="min-h-11 shrink-0 text-[11px] font-black text-[#2861E8]"
         >
           All circles
         </button>

@@ -19,6 +19,7 @@ describe('HomeCircleActivity', () => {
     expect(html).toContain('Game tonight');
     expect(html).toContain('aria-label="Open Five Towns 20s"');
     expect(html).toContain('aria-label="Browse all circles"');
+    expect(html).toContain('min-h-11');
     expect(html).not.toContain('active now');
     expect(html).not.toContain('people talking');
   });

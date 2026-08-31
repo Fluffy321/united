@@ -23,6 +23,8 @@ describe('HomeTonight', () => {
     expect(html).toContain('aria-label="Open Community shiur"');
     expect(html).toContain('aria-label="See all events"');
     expect(html).toContain('aria-label="Add an event"');
+    expect(html).toContain('h-11 w-11');
+    expect(html).toContain('min-h-11');
   });
 
   it('uses honest upcoming, empty, and error states', () => {

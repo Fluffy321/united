@@ -29,8 +29,8 @@ export default function HomeTonight({
           <h2 id="home-events-title" className="mt-0.5 text-[20px] font-black tracking-[-0.045em] text-[#101A2E]">{title}</h2>
         </div>
         <div className="flex items-center gap-1">
-          <button type="button" aria-label="Add an event" onClick={onAddEvent} className="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-100 text-orange-700"><CalendarPlus className="h-4 w-4" /></button>
-          <button type="button" aria-label="See all events" onClick={onOpenAll} className="min-h-9 px-1 text-[11px] font-black text-[#2861E8]">See all</button>
+          <button type="button" aria-label="Add an event" onClick={onAddEvent} className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-100 text-orange-700"><CalendarPlus className="h-4 w-4" /></button>
+          <button type="button" aria-label="See all events" onClick={onOpenAll} className="min-h-11 px-1 text-[11px] font-black text-[#2861E8]">See all</button>
         </div>
       </div>
 
