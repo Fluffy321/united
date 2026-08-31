@@ -18,6 +18,7 @@ import {
 import FiveTownsDirectory from './FiveTownsDirectory';
 import FiveTownsDailyPanel from './FiveTownsDailyPanel';
 import FeaturedPlaceCard from './FeaturedPlaceCard';
+import HomeSectionHeading from './HomeSectionHeading';
 import HomeCircleActivity from './HomeCircleActivity';
 import HomeTonight from './HomeTonight';
 import UsefulNearbyCard from './UsefulNearbyCard';
@@ -50,22 +51,11 @@ const GROUP_TONES = {
   'things-to-do': 'bg-orange-50 text-orange-700',
 };
 
+const HOME_DIRECTORY_GROUP_IDS = new Set(['jewish-life', 'food', 'family', 'things-to-do']);
+
 function initials(user) {
   const name = user?.display_name || user?.full_name || user?.first_name || 'J';
   return name.split(/\s+/).slice(0, 2).map((part) => part[0]).join('').toUpperCase();
-}
-
-function SectionHeading({ title, action, onAction }) {
-  return (
-    <div className="flex items-end justify-between gap-3 px-0.5 pt-1">
-      <h2 className="text-[20px] font-black tracking-[-0.045em] text-[#101A2E]">{title}</h2>
-      {action && (
-        <button type="button" onClick={onAction} className="min-h-9 shrink-0 text-[11px] font-black text-[#2861E8]">
-          {action}
-        </button>
-      )}
-    </div>
-  );
 }
 
 export default function FiveTownsHomeDashboard({
@@ -85,6 +75,7 @@ export default function FiveTownsHomeDashboard({
   onOpenCalendar,
   onOpenMessages,
   onOpenNotifications,
+  onTuneHome,
   onReportCorrection,
   dailyInfo = {},
 }) {
@@ -173,10 +164,13 @@ export default function FiveTownsHomeDashboard({
       </header>
 
       <div className="space-y-5 px-3.5 pt-3.5">
-        <button type="button" onClick={() => openDirectory('')} className="flex min-h-12 w-full items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-left shadow-[0_8px_20px_rgba(15,28,46,0.045)]">
-          <Search className="h-[18px] w-[18px] shrink-0 text-[#2861E8]" />
-          <span className="text-[13px] font-semibold text-slate-400">Find food, shuls, schools, shops, anything</span>
-        </button>
+        <div className="flex min-h-12 items-center rounded-2xl border border-slate-200 bg-white shadow-[0_8px_20px_rgba(15,28,46,0.045)]">
+          <button type="button" onClick={() => openDirectory('')} className="flex min-h-12 min-w-0 flex-1 items-center gap-2 px-4 text-left">
+            <Search className="h-[18px] w-[18px] shrink-0 text-[#2861E8]" />
+            <span className="truncate text-[13px] font-semibold text-slate-400">Find anything Jewish nearby</span>
+          </button>
+          <button type="button" aria-label="Tune Home" onClick={onTuneHome} className="min-h-11 shrink-0 border-l border-slate-100 px-3 text-[11px] font-black text-[#2861E8]">Tune</button>
+        </div>
 
         <FiveTownsDailyPanel
           weather={dailyInfo.weather}
@@ -185,12 +179,12 @@ export default function FiveTownsHomeDashboard({
         />
 
         <section className="space-y-2.5">
-          <SectionHeading title="Jewish directory" action="All listings" onAction={() => openDirectory('')} />
+          <HomeSectionHeading eyebrow="Everything Jewish" title="Find something" action="All listings" onAction={() => openDirectory('')} titleId="home-find-title" />
           <div className="grid grid-cols-4 gap-2">
-            {DIRECTORY_GROUPS.map((group) => {
+            {DIRECTORY_GROUPS.filter((group) => HOME_DIRECTORY_GROUP_IDS.has(group.id)).map((group) => {
               const Icon = GROUP_ICONS[group.id];
               return (
-                <button key={group.id} type="button" onClick={() => openDirectory(group.id)} className="min-h-[88px] rounded-[19px] border border-slate-200/90 bg-white px-1.5 py-2.5 text-center shadow-[0_6px_16px_rgba(15,28,46,0.04)] active:scale-95">
+                <button key={group.id} data-home-directory-shortcut={group.id} type="button" onClick={() => openDirectory(group.id)} className="min-h-[88px] rounded-[19px] border border-slate-200/90 bg-white px-1.5 py-2.5 text-center shadow-[0_6px_16px_rgba(15,28,46,0.04)] active:scale-95">
                   <span className={`mx-auto flex h-9 w-9 items-center justify-center rounded-xl ${GROUP_TONES[group.id]}`}><Icon className="h-[18px] w-[18px]" /></span>
                   <span className="mt-2 block text-[9px] font-black leading-tight">{group.label}</span>
                   <span className="mt-0.5 block text-[8px] font-bold text-slate-400">{counts[group.id]}</span>
@@ -201,7 +195,7 @@ export default function FiveTownsHomeDashboard({
         </section>
 
         <section className="space-y-2.5">
-          <SectionHeading title="Nearby worth knowing" action="Open all places" onAction={() => openDirectory('')} />
+          <HomeSectionHeading eyebrow="Close to you" title="Worth knowing nearby" action="See all" onAction={() => openDirectory('')} titleId="home-nearby-title" />
           <div className="-mx-3.5 flex snap-x gap-2.5 overflow-x-auto px-3.5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {featuredListings.map((listing) => (
               <div key={listing.id} className="snap-start"><FeaturedPlaceCard listing={listing} onOpen={() => openDirectory(listing.groupId, listing.id)} /></div>
@@ -210,7 +204,7 @@ export default function FiveTownsHomeDashboard({
         </section>
 
         <section className="space-y-2.5">
-          <SectionHeading title="Useful nearby" action="See everything" onAction={() => openDirectory('')} />
+          <HomeSectionHeading eyebrow="Pick a mood" title="Useful nearby" action="Everything" onAction={() => openDirectory('')} titleId="home-useful-title" />
           <div className="-mx-3.5 flex snap-x gap-2.5 overflow-x-auto px-3.5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {usefulNearby.map((need) => (
               <div key={need.title} className="snap-start"><UsefulNearbyCard {...need} onOpen={() => openDirectory(need.groupId)} /></div>

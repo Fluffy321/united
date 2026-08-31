@@ -69,6 +69,7 @@ describe('Mobile headquarters Feed contract', () => {
     expect(source).toContain('onOpenEvents={() => setShowEventsSheet(true)}');
     expect(source).toContain("onAddEvent={() => navigate('/Publish?type=event')}");
     expect(source).toContain('onOpenEvent={(event) => setReplyPost(event)}');
+    expect(source).toContain("onTuneHome={() => navigate('/Settings?section=notifications')}");
     expect(source).not.toContain('`/communities/${group.id}`');
   });
 });

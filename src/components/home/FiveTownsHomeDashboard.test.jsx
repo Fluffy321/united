@@ -33,10 +33,13 @@ describe('FiveTownsHomeDashboard', () => {
     expect(html).toContain('Five Towns today');
     expect(html).toContain('75°');
     expect(html).not.toContain('Everything local, without the noise.');
-    expect(html).toContain('Find food, shuls, schools, shops, anything');
-    expect(html).toContain('Jewish directory');
-    expect(html).toContain('Nearby worth knowing');
+    expect(html).toContain('Find anything Jewish nearby');
+    expect(html).toContain('aria-label="Tune Home"');
+    expect(html).toContain('Everything Jewish');
+    expect(html).toContain('Find something');
+    expect(html).toContain('Worth knowing nearby');
     expect(html).toContain('Useful nearby');
+    expect(html.match(/data-home-directory-shortcut=/g)).toHaveLength(4);
     expect(html).toContain('Get the kids out');
     expect(html).toContain('Need a calm hour');
     expect(html).toContain('Make a full afternoon');
@@ -46,6 +49,9 @@ describe('FiveTownsHomeDashboard', () => {
     expect(html).toContain('Circle update');
     expect(html).toContain('Happening tonight');
     expect(html).toContain('Community shiur');
+    expect(html.indexOf('Five Towns today')).toBeLessThan(html.indexOf('Find something'));
+    expect(html.indexOf('Find something')).toBeLessThan(html.indexOf('Worth knowing nearby'));
+    expect(html.indexOf('Worth knowing nearby')).toBeLessThan(html.indexOf('Useful nearby'));
     expect(html.indexOf('Useful nearby')).toBeLessThan(html.indexOf('From your circles'));
     expect(html.indexOf('From your circles')).toBeLessThan(html.indexOf('Happening tonight'));
     expect(html).not.toContain('Your city today');

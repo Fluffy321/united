@@ -528,6 +528,7 @@ export default function Feed() {
               onOpenCalendar={() => setShowCalendarSheet(true)}
               onOpenMessages={() => navigate('/Messages')}
               onOpenNotifications={() => navigate('/Notifications')}
+              onTuneHome={() => navigate('/Settings?section=notifications')}
               onReportCorrection={() => toast.message('Use Send feedback in Me to report a directory correction.')}
               dailyInfo={dailyInfo}
             />
