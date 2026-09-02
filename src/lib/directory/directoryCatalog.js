@@ -28,12 +28,17 @@ const MAP_TYPE_BY_CATEGORY = {
   shuls: 'shul',
   minyanim: 'minyan',
   mikvahs: 'mikvah',
-  restaurants: 'kosher_food',
-  groceries: 'kosher_food',
-  bakeries: 'kosher_food',
-  catering: 'kosher_food',
+  restaurants: 'restaurant',
+  groceries: 'grocery',
+  bakeries: 'bakery',
+  catering: 'restaurant',
   schools: 'school',
   chesed: 'chesed',
+  judaica: 'judaica',
+  wellness: 'wellness',
+  doctors: 'wellness',
+  dentists: 'wellness',
+  therapists: 'wellness',
 };
 
 function clean(value) {

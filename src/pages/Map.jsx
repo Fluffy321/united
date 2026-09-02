@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import {
   BadgeCheck,
   BarChart3,
@@ -34,15 +34,18 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import PageHelp from '@/components/common/PageHelp';
 import DestinationHeader from '@/components/layout/DestinationHeader';
-import LiveNowRail from '@/components/common/LiveNowRail';
-import { buildMapLiveNowItems } from '@/lib/liveNow';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/api/supabaseClient';
 import { COMMUNITIES_ENABLED } from '@/config/features';
 import { createBusinessClaimRequest, createBusinessListing, filterBusinessClaimRequest, filterBusinessListing, filterBusinessManager, filterUserCommunity, listBusinessListing, listBusinessReview, listCommunity, listMitzvahRequest, listUnifiedPost } from '@/services/entityServices';
 import { postKeys } from '@/lib/queryKeys';
+import { FIVE_TOWNS_LISTINGS } from '@/lib/directory/fiveTownsDirectory';
+import {
+  directoryListingToMapPoint,
+  filterDirectoryCatalog,
+  mergeDirectoryListings,
+} from '@/lib/directory/directoryCatalog';
 
-const BusinessMap = lazy(() => import('@/components/business/BusinessMap'));
 const MitzvahMap = lazy(() => import('@/components/mitzvah/MitzvahMap'));
 
 const MAP_FILTER_STORAGE = 'junited-map-community-filters';
@@ -111,6 +114,65 @@ function businessCategoryKey(value) {
 
 function businessCategory(value) {
   return BUSINESS_CATEGORIES.find((cat) => cat.key === businessCategoryKey(value)) || BUSINESS_CATEGORIES[0];
+}
+
+function directoryBusinessCategory(listing) {
+  if (listing.groupId === 'food') return 'food_dining';
+  if (listing.groupId === 'health') return 'health';
+  if (listing.groupId === 'things-to-do') return 'attractions';
+  if (listing.categoryId === 'childcare') return 'childcare';
+  if (listing.categoryId === 'mikvahs') return 'mikvahs';
+  if (listing.categoryId === 'chesed') return 'chessed';
+  if (listing.categoryId === 'car-services') return 'car_services';
+  if (listing.categoryId === 'gifts' || listing.categoryId === 'florists') return 'hostess_gifts';
+  return 'local_businesses';
+}
+
+function directoryListingToBusinessRecord(listing) {
+  const submitted = listing.rawSubmittedRecord || {};
+  return {
+    ...submitted,
+    id: listing.id,
+    directory_id: listing.id,
+    source_record_id: listing.sourceRecordId,
+    source_kind: listing.sourceKind,
+    name: listing.name,
+    description: listing.description,
+    category: submitted.category || directoryBusinessCategory(listing),
+    directory_group_id: listing.groupId,
+    directory_category_id: listing.categoryId,
+    listing_type: listing.listingType || 'physical',
+    address: listing.address,
+    city: listing.town,
+    neighborhood: submitted.neighborhood || listing.town,
+    location_lat: listing.latitude,
+    location_lng: listing.longitude,
+    phone: listing.phone,
+    website: listing.website,
+    logo_url: submitted.logo_url || listing.imageUrl,
+    cover_url: submitted.cover_url || listing.imageUrl,
+    source_url: listing.sourceUrl,
+    source_label: listing.sourceLabel,
+    kosher_source_url: listing.kosherSourceUrl,
+    verification_status: submitted.verification_status || listing.verificationStatus,
+    is_claimed: Boolean(submitted.is_claimed || listing.isClaimed),
+    kosher_status: listing.kosher ? 'certified' : submitted.kosher_status,
+    kosher_certifying_agency: listing.kosherCertifier || submitted.kosher_certifying_agency,
+    claim_status: listing.sourceKind === 'submitted' ? submitted.claim_status : 'not_claimable',
+    hide_exact_address: Boolean(submitted.hide_exact_address),
+  };
+}
+
+function directoryScope(categoryParam) {
+  const value = String(categoryParam || '').trim().toLowerCase();
+  if (!value) return {};
+  if (['jewish-life', 'food', 'family', 'shopping', 'health', 'services', 'community', 'things-to-do'].includes(value)) {
+    return { groupId: value };
+  }
+  if (FIVE_TOWNS_LISTINGS.some((listing) => listing.categoryId === value)) {
+    return { categoryId: value };
+  }
+  return {};
 }
 
 const LISTING_TYPES = [
@@ -345,7 +407,7 @@ function BusinessCard({ business, onView, onClaim }) {
               <Navigation className="h-3.5 w-3.5" />Directions
             </a>
           )}
-          {business.claim_status !== 'claimed' && (
+          {business.source_kind === 'submitted' && business.claim_status !== 'claimed' && (
             <button type="button" onClick={() => onClaim(business)} className="motion-press inline-flex h-9 items-center rounded-full border border-slate-200 px-3 text-xs font-black text-slate-500">
               Claim
             </button>
@@ -686,9 +748,9 @@ function ClaimBusinessModal({ business, onClose, currentUser }) {
 
 function BusinessDetailModal({ business, onClose, onClaim }) {
   useEffect(() => {
-    if (!business?.id || !supabase) return;
-    supabase.rpc('increment_business_listing_view', { p_listing_id: business.id }).catch(() => {});
-  }, [business?.id]);
+    if (!business?.source_record_id || business?.source_kind !== 'submitted' || !supabase) return;
+    supabase.rpc('increment_business_listing_view', { p_listing_id: business.source_record_id }).catch(() => {});
+  }, [business?.source_kind, business?.source_record_id]);
 
   if (!business) return null;
   const hasDirections = business.listing_type === 'physical' && (business.address || (business.location_lat && business.location_lng)) && !business.hide_exact_address;
@@ -727,9 +789,26 @@ function BusinessDetailModal({ business, onClose, onClaim }) {
               Directions
             </a>
           )}
-          {business.claim_status !== 'claimed' && (
+          {business.source_url && (
+            <a href={cleanUrl(business.source_url)} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-xs font-black text-slate-700">
+              <ShieldCheck className="h-4 w-4" />
+              {business.source_label || 'Source'}
+            </a>
+          )}
+          {business.kosher_source_url && (
+            <a href={cleanUrl(business.kosher_source_url)} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 text-xs font-black text-emerald-700">
+              <ShieldCheck className="h-4 w-4" />
+              Kosher source
+            </a>
+          )}
+          {business.source_kind === 'submitted' && business.claim_status !== 'claimed' && (
             <button type="button" onClick={() => onClaim(business)} className="inline-flex h-10 items-center rounded-full border border-slate-200 bg-white px-4 text-xs font-black text-slate-700">
               Claim this business
+            </button>
+          )}
+          {business.source_kind === 'trusted' && (
+            <button type="button" onClick={() => toast.message('Use Send feedback in Me to report a directory correction.')} className="inline-flex h-10 items-center rounded-full border border-slate-200 bg-white px-4 text-xs font-black text-slate-700">
+              Report a correction
             </button>
           )}
         </div>
@@ -1016,21 +1095,32 @@ function BusinessOwnerDashboard({ open, onClose, currentUser, ownerListings = []
   );
 }
 
-function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser }) {
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('all');
+function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser, searchParams }) {
+  const categoryParam = searchParams.get('category') || '';
+  const placeParam = searchParams.get('place') || '';
+  const initialScope = directoryScope(categoryParam);
+  const [search, setSearch] = useState(placeParam);
+  const [category, setCategory] = useState(
+    Object.keys(initialScope).length === 0 && categoryParam ? businessCategoryKey(categoryParam) : 'all',
+  );
+  const [catalogScope, setCatalogScope] = useState(initialScope);
   const [type, setType] = useState('all');
-  const [mode, setMode] = useState('list');
+  const [mode, setMode] = useState(placeParam ? 'map' : 'list');
   const [showSubmit, setShowSubmit] = useState(false);
   const [showOwnerTools, setShowOwnerTools] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState(null);
   const [claimBusiness, setClaimBusiness] = useState(null);
 
-  const { data: businesses = [], isLoading } = useQuery({
+  const { data: submittedBusinesses = [], isLoading } = useQuery({
     queryKey: ['business-directory-published'],
     queryFn: () => filterBusinessListing({ status: 'published' }, '-created_date', 200),
     staleTime: 120000,
   });
+
+  const directoryListings = useMemo(
+    () => mergeDirectoryListings(FIVE_TOWNS_LISTINGS, submittedBusinesses),
+    [submittedBusinesses],
+  );
 
   const { data: managerRows = [] } = useQuery({
     queryKey: ['business-manager-rows', currentUser?.id],
@@ -1079,30 +1169,34 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
     [allBusinessReviews, ownerBusinessIds]
   );
 
-  const filteredBusinesses = useMemo(() => businesses.filter((business) => {
-    const q = search.trim().toLowerCase();
-    const normalizedCategory = businessCategory(business.category);
-    const haystack = `${business.name || ''} ${business.description || ''} ${business.category || ''} ${normalizedCategory.label || ''} ${business.neighborhood || ''} ${business.city || ''}`.toLowerCase();
-    if (q && !haystack.includes(q)) return false;
-    if (category !== 'all' && businessCategoryKey(business.category) !== category) return false;
-    if (type !== 'all' && business.listing_type !== type) return false;
-    return true;
-  }), [businesses, category, search, type]);
+  const filteredListings = useMemo(() => filterDirectoryCatalog(directoryListings, {
+    query: search,
+    listingType: type,
+    ...catalogScope,
+  }), [catalogScope, directoryListings, search, type]);
 
-  const mapBusinesses = useMemo(() => filteredBusinesses.filter((business) => (
-    business.listing_type === 'physical'
-    && business.location_lat
-    && business.location_lng
-    && !business.hide_exact_address
-  )), [filteredBusinesses]);
+  const filteredBusinesses = useMemo(() => filteredListings
+    .map(directoryListingToBusinessRecord)
+    .filter((business) => {
+    const normalizedCategory = businessCategory(business.category);
+    if (category !== 'all' && businessCategoryKey(business.category) !== category) return false;
+    if (category !== 'all' && !normalizedCategory) return false;
+    return true;
+  }), [category, filteredListings]);
+
+  const directoryPoints = useMemo(
+    () => filteredListings.map(directoryListingToMapPoint).filter(Boolean),
+    [filteredListings],
+  );
 
   const verifiedBusinesses = useMemo(
-    () => businesses.filter((b) => b.verification_status === 'verified_owner' || b.is_claimed || b.jewish_owned_status === 'verified'),
-    [businesses]
+    () => filteredBusinesses.filter((b) => b.verification_status === 'verified_owner' || b.is_claimed || b.jewish_owned_status === 'verified'),
+    [filteredBusinesses]
   );
 
   const clearBusinessFilters = () => {
     setCategory('all');
+    setCatalogScope({});
     setSearch('');
     setType('all');
   };
@@ -1184,7 +1278,10 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
                 key={cat.key}
                 type="button"
                 aria-pressed={isActive}
-                onClick={() => setCategory(cat.key)}
+                onClick={() => {
+                  setCatalogScope({});
+                  setCategory(cat.key);
+                }}
                 className={`app-chip motion-press min-h-11 shrink-0 ${isActive ? 'app-chip-active' : ''}`}
               >
                 <CatIcon className={`h-4 w-4 ${isActive ? 'text-current opacity-90' : cat.iconColor}`} />
@@ -1218,10 +1315,13 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
             <Loader2 className="h-7 w-7 animate-spin text-blue-600" />
           </div>
         ) : mode === 'map' ? (
-          <Suspense fallback={<MapModuleFallback label="Loading business map..." />}>
-            <BusinessMap businesses={mapBusinesses} userLocation={userLocation} />
-          </Suspense>
-        ) : businesses.length === 0 ? (
+          <CommunityMapExperience
+            userLocation={userLocation}
+            locationStatus={locationStatus}
+            searchParams={searchParams}
+            directoryPoints={directoryPoints}
+          />
+        ) : directoryListings.length === 0 ? (
           <div className="app-empty-state">
             <div className="app-empty-state-icon"><Store className="h-6 w-6" /></div>
             <p className="app-empty-state-title">The directory is getting started</p>
@@ -1262,12 +1362,22 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
   );
 }
 
-function CommunityMapExperience({ userLocation, locationStatus, searchParams }) {
+function CommunityMapExperience({ userLocation, locationStatus, searchParams, directoryPoints = [] }) {
   const { user: currentUser } = useAuth();
   const [selectedCommunityIds, setSelectedCommunityIds] = useState(() => new Set());
   const [{ hiddenCommunityIds, hiddenPosterIds }, setMapFilterState] = useState(readMapFilterState);
   const [showMapFilters, setShowMapFilters] = useState(false);
-  const categoryParam = searchParams.get('category') || 'kosher_food';
+  const rawCategoryParam = searchParams.get('category') || '';
+  const categoryParam = ({
+    food: 'kosher_food',
+    restaurants: 'restaurants',
+    shuls: 'shuls',
+    schools: 'schools_yeshivas',
+    family: 'schools_yeshivas',
+    services: 'businesses',
+    shopping: 'businesses',
+    health: 'businesses',
+  })[rawCategoryParam] || rawCategoryParam;
   const placeParam = searchParams.get('place') || '';
 
   const { data: requests = [] } = useQuery({
@@ -1509,6 +1619,7 @@ function CommunityMapExperience({ userLocation, locationStatus, searchParams }) 
             requests={requests}
             userLocation={userLocation}
             communityPoints={COMMUNITIES_ENABLED ? communityPoints : []}
+            directoryPoints={directoryPoints}
             includeStaticPoints
             initialPrimaryFilter={categoryParam}
             highlightedPlace={placeParam}
@@ -1521,11 +1632,8 @@ function CommunityMapExperience({ userLocation, locationStatus, searchParams }) 
 }
 
 export default function MapPage() {
-  const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const [searchParams] = useSearchParams();
-  const hasMapDeepLink = Boolean(searchParams.get('category') || searchParams.get('requestId') || searchParams.get('place'));
-  const [activeView, setActiveView] = useState('businesses');
   const [userLocation, setUserLocation] = useState(null);
   const [locationStatus, setLocationStatus] = useState('idle');
 
@@ -1554,18 +1662,8 @@ export default function MapPage() {
     requestUserLocation(true);
   }, []);
 
-  useEffect(() => {
-    if (hasMapDeepLink) setActiveView('community');
-  }, [hasMapDeepLink]);
-
   const handleUseMyLocation = () => requestUserLocation(true);
   const isDeepLinkedMap = searchParams.toString().length > 0;
-  const switchView = (view) => {
-    setActiveView(view);
-    window.requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-    });
-  };
 
   return (
     <main className="app-page min-h-screen mobile-safe-bottom">
@@ -1588,57 +1686,15 @@ export default function MapPage() {
             </button>
           )}
         />
-
-        {/* View toggle — grouped in the same sticky wrapper as the header so it stays anchored without guessing the header's height */}
-        <div className="mobile-page-wide px-3 pb-2 pt-1 sm:px-4">
-        <div className="glass-toolbar grid grid-cols-2 gap-1.5 rounded-2xl p-1">
-          <button
-            type="button"
-            aria-pressed={activeView === 'businesses'}
-            onClick={() => switchView('businesses')}
-            className={`flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 text-xs font-black transition ${activeView === 'businesses' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'}`}
-          >
-            <Store className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">Businesses</span>
-          </button>
-          <button
-            type="button"
-            aria-pressed={activeView === 'community'}
-            onClick={() => switchView('community')}
-            className={`flex min-h-11 min-w-0 items-center justify-center gap-1.5 rounded-xl px-2 text-xs font-black transition ${activeView === 'community' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500'}`}
-          >
-            <Sparkles className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">{COMMUNITIES_ENABLED ? 'Community Map' : 'Local Map'}</span>
-          </button>
-        </div>
-        </div>
       </div>
 
       <div className="mobile-page-wide px-3 pt-1 sm:px-4">
-
-        {activeView === 'community' && (
-          <LiveNowRail
-            className="mb-3"
-            title="Activity map"
-            subtitle="Live needs, minyanim, and trusted places around the Five Towns"
-            items={buildMapLiveNowItems()}
-            onItemClick={(item) => navigate(item.href || '/Map')}
-          />
-        )}
-
-        {activeView === 'businesses' ? (
-          <BusinessDirectoryExperience
-            currentUser={currentUser}
-            userLocation={userLocation}
-            locationStatus={locationStatus}
-          />
-        ) : (
-          <CommunityMapExperience
-            userLocation={userLocation}
-            locationStatus={locationStatus}
-            searchParams={searchParams}
-          />
-        )}
+        <BusinessDirectoryExperience
+          currentUser={currentUser}
+          userLocation={userLocation}
+          locationStatus={locationStatus}
+          searchParams={searchParams}
+        />
       </div>
     </main>
   );

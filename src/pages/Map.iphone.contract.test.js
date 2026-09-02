@@ -8,12 +8,14 @@ const businessEnd = source.indexOf('function CommunityMapExperience');
 const businessSource = source.slice(businessStart, businessEnd);
 
 describe('Map iPhone Directory contract', () => {
-  it('opens the Directory to Businesses while preserving both views', () => {
-    expect(source).toContain("useState('businesses')");
-    expect(source).toContain("switchView('businesses')");
-    expect(source).toContain("switchView('community')");
+  it('opens one Directory with List and Map instead of competing products', () => {
+    expect(source).not.toContain("useState('businesses')");
+    expect(source).not.toContain("switchView('businesses')");
+    expect(source).not.toContain("switchView('community')");
     expect(source).toContain('<BusinessDirectoryExperience');
     expect(source).toContain('<CommunityMapExperience');
+    expect(businessSource).toContain("setMode('list')");
+    expect(businessSource).toContain("setMode('map')");
   });
 
   it('puts search before compact categories and results', () => {
@@ -30,7 +32,7 @@ describe('Map iPhone Directory contract', () => {
   });
 
   it('keeps an empty directory distinct from filtered no matches', () => {
-    expect(businessSource).toContain('businesses.length === 0');
+    expect(businessSource).toContain('directoryListings.length === 0');
     expect(businessSource).toContain('The directory is getting started');
     expect(businessSource).toContain('No matches for these filters');
     expect(businessSource).toContain("setCategory('all')");
@@ -38,8 +40,9 @@ describe('Map iPhone Directory contract', () => {
     expect(businessSource).toContain("setType('all')");
   });
 
-  it('does not put the activity map before business search', () => {
-    expect(source).toContain("activeView === 'community' && (");
+  it('does not put a duplicate activity rail before directory search', () => {
+    expect(source).not.toContain('<LiveNowRail');
+    expect(source).not.toContain("activeView === 'community' && (");
   });
 
   it('keeps location help after search and gives view controls their own row', () => {

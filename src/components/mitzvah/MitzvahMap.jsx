@@ -19,10 +19,11 @@ import SelectedPointCard from './map/SelectedPointCard';
 import MitzvahMapFilterBar from './map/MitzvahMapFilterBar';
 
 export default function MitzvahMap({
-  requests,
+  requests = [],
   userLocation,
   onSelectRequest,
   communityPoints = [],
+  directoryPoints = [],
   personalized = true,
   mapHeight,
   includeStaticPoints = false,
@@ -32,6 +33,7 @@ export default function MitzvahMap({
   const [mapCenter, setMapCenter] = useState(null);
   const [activeTypes, setActiveTypes] = useState(() => new Set());
   const [showTypeFilters, setShowTypeFilters] = useState(false);
+  const [activeLayers, setActiveLayers] = useState(() => new Set(['places']));
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [tileUrl, setTileUrl] = useState('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png');
   const resolvedMapHeight = mapHeight || 'clamp(460px, 64dvh, 720px)';
@@ -56,10 +58,16 @@ export default function MitzvahMap({
       isCommunityPoint: true,
     }));
   }, [communityPoints]);
-  const allPoints = useMemo(
-    () => [...requestPoints, ...personalizedPoints, ...(includeStaticPoints ? VERIFIED_STATIC_POINTS : [])],
-    [includeStaticPoints, personalizedPoints, requestPoints]
-  );
+  const allPoints = useMemo(() => {
+    const trustedPlaces = directoryPoints.length > 0
+      ? directoryPoints
+      : (includeStaticPoints && directoryPoints.length === 0 ? VERIFIED_STATIC_POINTS : []);
+    return [
+      ...(activeLayers.has('help') ? requestPoints : []),
+      ...(activeLayers.has('community') ? personalizedPoints : []),
+      ...(activeLayers.has('places') ? trustedPlaces : []),
+    ];
+  }, [activeLayers, directoryPoints, includeStaticPoints, personalizedPoints, requestPoints]);
   // No filters selected = show everything; the map should never be empty
   const visiblePoints = useMemo(
     () => (activeTypes.size === 0 ? allPoints : allPoints.filter((point) => activeTypes.has(point.type))),
@@ -113,12 +121,24 @@ export default function MitzvahMap({
   };
 
   const applyPrimaryFilter = (filter) => {
+    const needsHelp = filter.types.some((type) => ['help_needed', 'mitzvah_available', 'lost_found'].includes(type));
+    setActiveLayers((current) => new Set([...current, needsHelp ? 'help' : 'places']));
     if (activePrimaryFilter === filter.key) {
       setActiveTypes(new Set());
       setSelectedPoint(null);
       return;
     }
     setActiveTypes(new Set(filter.types));
+    setSelectedPoint(null);
+  };
+
+  const toggleLayer = (layer) => {
+    setActiveLayers((current) => {
+      const next = new Set(current);
+      if (next.has(layer)) next.delete(layer);
+      else next.add(layer);
+      return next;
+    });
     setSelectedPoint(null);
   };
 
@@ -134,6 +154,7 @@ export default function MitzvahMap({
     <div className="overflow-hidden rounded-2xl border-2 border-slate-200 bg-white">
       <MitzvahMapFilterBar
         personalized={personalized}
+        activeLayers={activeLayers}
         activeTypes={activeTypes}
         activePrimaryFilter={activePrimaryFilter}
         showTypeFilters={showTypeFilters}
@@ -142,6 +163,7 @@ export default function MitzvahMap({
         onSetShowTypeFilters={setShowTypeFilters}
         onApplyPrimaryFilter={applyPrimaryFilter}
         onToggleType={toggleType}
+        onToggleLayer={toggleLayer}
       />
 
       {/* Map canvas */}
@@ -206,6 +228,10 @@ export default function MitzvahMap({
               return (
                 <Marker
                   key={point.id}
+                  title={point.title || 'Map location'}
+                  alt={point.title || 'Map location'}
+                  keyboard={true}
+                  riseOnHover={true}
                   position={[point.location_lat, point.location_lng]}
                   icon={createMarkerIcon(point.type)}
                   eventHandlers={{
