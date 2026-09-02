@@ -41,6 +41,9 @@ describe('directory catalog', () => {
   it('maps common submitted categories into the approved directory groups', () => {
     const samples = [
       ['Kosher Food', 'food', 'restaurants'],
+      ['Kosher Grocery', 'food', 'groceries'],
+      ['Bakery', 'food', 'bakeries'],
+      ['Catering', 'food', 'catering'],
       ['Shul', 'jewish-life', 'shuls'],
       ['School', 'family', 'schools'],
       ['Dentist', 'health', 'dentists'],
@@ -57,6 +60,23 @@ describe('directory catalog', () => {
       });
       expect(listing).toMatchObject({ groupId, categoryId });
     });
+  });
+
+  it('does not treat an unverified kosher string as certification', () => {
+    expect(normalizeSubmittedBusiness({
+      id: 'db-1',
+      name: 'Unverified Restaurant',
+      category: 'restaurant',
+      kosher_claim: 'Not checked',
+    }).kosher).toBe(false);
+
+    expect(normalizeSubmittedBusiness({
+      id: 'db-2',
+      name: 'Verified Restaurant',
+      category: 'restaurant',
+      kosher_status: 'certified',
+      kosher_certifying_agency: 'Five Towns Vaad',
+    }).kosher).toBe(true);
   });
 
   it('keeps trusted records and excludes unpublished submissions', () => {

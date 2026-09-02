@@ -1,5 +1,8 @@
 const SUBMITTED_CATEGORY_MAP = [
-  { pattern: /restaurant|food|dining|pizza|cafe|bakery|grocery|cater/i, groupId: 'food', categoryId: 'restaurants' },
+  { pattern: /grocery|market/i, groupId: 'food', categoryId: 'groceries' },
+  { pattern: /bakery|bakeshop/i, groupId: 'food', categoryId: 'bakeries' },
+  { pattern: /cater/i, groupId: 'food', categoryId: 'catering' },
+  { pattern: /restaurant|food|dining|pizza|cafe/i, groupId: 'food', categoryId: 'restaurants' },
   { pattern: /shul|synagogue|minyan|congregation/i, groupId: 'jewish-life', categoryId: 'shuls' },
   { pattern: /mikvah/i, groupId: 'jewish-life', categoryId: 'mikvahs' },
   { pattern: /torah|learning|yeshiva|kollel/i, groupId: 'jewish-life', categoryId: 'torah-learning' },
@@ -98,6 +101,7 @@ export function normalizeSubmittedBusiness(record = {}) {
     : 'physical';
   const address = submittedAddress(record);
   const imageUrl = clean(record.cover_url || record.logo_url);
+  const kosherStatus = clean(record.kosher_status).toLowerCase();
 
   return {
     id: `business:${clean(record.id)}`,
@@ -122,7 +126,7 @@ export function normalizeSubmittedBusiness(record = {}) {
     whyGo: clean(record.why_go || record.description),
     tags: [record.category, record.neighborhood, record.city].map(clean).filter(Boolean),
     featured: Boolean(record.featured),
-    kosher: Boolean(record.kosher_claim || record.kosher_certifying_agency),
+    kosher: ['certified', 'verified', 'current'].includes(kosherStatus),
     kosherCertifier: clean(record.kosher_certifying_agency),
     kosherSourceUrl: clean(record.kosher_source_url),
     lastChecked: clean(record.updated_date || record.created_date),
