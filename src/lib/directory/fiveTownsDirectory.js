@@ -207,6 +207,12 @@ export function normalizeDirectoryListing(record) {
     kosherCertifier: record.kosher_certifier || (certifiedByVaad ? 'Five Towns & Far Rockaway Vaad Hakashrus' : ''),
     kosherSourceUrl: record.kosher_source_url || (certifiedByVaad ? record.source_url : ''),
     lastChecked: record.last_checked || '',
+    sourceKind: 'trusted',
+    sourceRecordId: null,
+    listingType: 'physical',
+    verificationStatus: 'trusted_source',
+    isClaimed: false,
+    rawSubmittedRecord: null,
   };
 }
 
