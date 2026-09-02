@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Search, X, Clock, Filter, ChevronLeft, Users, Calendar, FileText, User, Loader2, Store, ShoppingBag, HeartHandshake, MapPin } from 'lucide-react';
@@ -7,6 +7,8 @@ import { useAuth } from '@/lib/AuthContext';
 import { appParams } from '@/lib/app-params';
 import { COMMUNITIES_ENABLED } from '@/config/features';
 import { formatDistanceToNow } from 'date-fns';
+import { FIVE_TOWNS_LISTINGS } from '@/lib/directory/fiveTownsDirectory';
+import { filterDirectoryCatalog } from '@/lib/directory/directoryCatalog';
 
 const POST_TYPES = [
   { value: '', label: 'All types' },
@@ -138,7 +140,7 @@ export default function SearchPage() {
 
   const hasQuery = debouncedQuery.trim().length >= 2;
 
-  const { data: results = null, isFetching: searching } = useQuery({
+  const { data: results = EMPTY_RESULTS, isFetching: searching } = useQuery({
     queryKey: ['universal-search', debouncedQuery, filters, user?.id],
     queryFn: async () => {
       if (!appParams.hasBackendConfig) return EMPTY_RESULTS;
@@ -172,15 +174,28 @@ export default function SearchPage() {
   };
 
   const visibleCommunities = COMMUNITIES_ENABLED ? (results?.communities || []) : [];
-  const totalResults = results
-    ? (results.posts?.length || 0)
-      + visibleCommunities.length
-      + (results.events?.length || 0)
-      + (results.people?.length || 0)
-      + (results.mitzvahRequests?.length || 0)
-      + (results.businesses?.length || 0)
-      + (results.marketplace?.length || 0)
-    : 0;
+  const localDirectoryResults = useMemo(
+    () => (hasQuery ? filterDirectoryCatalog(FIVE_TOWNS_LISTINGS, { query: debouncedQuery }).slice(0, 30) : []),
+    [debouncedQuery, hasQuery],
+  );
+  const localDirectoryNames = useMemo(
+    () => new Set(localDirectoryResults.map((listing) => listing.name.trim().toLowerCase())),
+    [localDirectoryResults],
+  );
+  const remoteDirectoryResults = useMemo(
+    () => (results.businesses || []).filter((business) => (
+      !localDirectoryNames.has(String(business.name || '').trim().toLowerCase())
+    )),
+    [localDirectoryNames, results.businesses],
+  );
+  const totalResults = (results.posts?.length || 0)
+    + visibleCommunities.length
+    + (results.events?.length || 0)
+    + (results.people?.length || 0)
+    + (results.mitzvahRequests?.length || 0)
+    + localDirectoryResults.length
+    + remoteDirectoryResults.length
+    + (results.marketplace?.length || 0);
 
   return (
     <div className="min-h-screen bg-slate-50 pb-24">
@@ -265,18 +280,23 @@ export default function SearchPage() {
         )}
 
         {/* Searching indicator */}
-        {searching && (
-          <div className="flex justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+        {searching && hasQuery && (
+          <div className="mb-3 flex items-center justify-center gap-2 rounded-xl bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Checking live posts and people…
           </div>
         )}
 
         {/* Results */}
-        {results && !searching && (
+        {hasQuery && (
           <>
             <div className="flex items-center justify-between mb-4">
               <p className="text-[13px] text-slate-500">
-                {totalResults === 0 ? `No matches for "${debouncedQuery}"` : `${totalResults} result${totalResults !== 1 ? 's' : ''} for "${debouncedQuery}"`}
+                {searching && totalResults === 0
+                  ? `Searching for "${debouncedQuery}"…`
+                  : totalResults === 0
+                    ? `No matches for "${debouncedQuery}"`
+                    : `${totalResults} result${totalResults !== 1 ? 's' : ''} for "${debouncedQuery}"`}
               </p>
               {query.trim().length >= 2 && user && (
                 <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-semibold text-slate-500">
@@ -285,7 +305,7 @@ export default function SearchPage() {
               )}
             </div>
 
-            {totalResults === 0 && (
+            {totalResults === 0 && !searching && (
               <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-10 text-center">
                 <p className="text-4xl mb-3">🔍</p>
                 <p className="font-black text-slate-800">Nothing matched "{debouncedQuery}"</p>
@@ -326,8 +346,18 @@ export default function SearchPage() {
               ))}
             </ResultSection>
 
-            <ResultSection title="Businesses, shuls, schools, map pins" icon={MapPin} count={results.businesses?.length}>
-              {results.businesses?.map(b => (
+            <ResultSection title="Places & directory" icon={MapPin} count={localDirectoryResults.length + remoteDirectoryResults.length}>
+              {localDirectoryResults.map((listing) => (
+                <SimpleResult
+                  key={listing.id}
+                  item={listing}
+                  icon={Store}
+                  title={listing.name}
+                  subtitle={`${listing.categoryId || 'Directory'} · ${listing.address || listing.town || 'Five Towns'}`}
+                  onClick={() => navigate(`/Map?place=${encodeURIComponent(listing.name)}`)}
+                />
+              ))}
+              {remoteDirectoryResults.map(b => (
                 <SimpleResult
                   key={b.id}
                   item={b}
