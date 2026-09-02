@@ -3,7 +3,7 @@ import { ArrowLeft, Check, ChevronRight, Loader2 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
-import { filterUserCommunity } from '@/services/entityServices';
+import { filterUserCommunity, listCommunity } from '@/services/entityServices';
 import PublishingTypePicker from '@/components/publishing/PublishingTypePicker';
 import PublishingForm from '@/components/publishing/PublishingForm';
 import PublishingPreview from '@/components/publishing/PublishingPreview';
@@ -11,6 +11,7 @@ import MyPublishing from '@/components/publishing/MyPublishing';
 import { createPublishingDraft, toPublishCommand, validatePublishingDraft } from '@/lib/publishing/publishingDraft';
 import { getPublishingType } from '@/lib/publishing/publishingTypes';
 import { publishingService } from '@/services/publishingService';
+import { resolvePublishingCommunities } from '@/lib/publishing/publishingCommunities';
 
 const DRAFT_KEY = 'junited-smart-publishing-draft';
 
@@ -68,6 +69,12 @@ export default function Publish() {
     queryFn: () => filterUserCommunity({ user_id: user.id, status: 'active' }, '-created_date', 100),
     enabled: Boolean(user?.id),
   });
+  const { data: communities = [] } = useQuery({
+    queryKey: ['publishing-community-catalog'],
+    queryFn: () => listCommunity('-follower_count', 200),
+    enabled: Boolean(user?.id),
+    staleTime: 120000,
+  });
   const myPublishingQuery = useQuery({
     queryKey: ['my-publishing', user?.id],
     queryFn: () => publishingService.listMine(null),
@@ -77,8 +84,8 @@ export default function Publish() {
   const myPosts = Array.isArray(myPublishingQuery.data) ? myPublishingQuery.data : myPublishingQuery.data?.items || [];
   const userContext = React.useMemo(() => ({
     network: user?.city || user?.neighborhood || user?.public_community || 'Five Towns',
-    joinedCommunities: memberships.map((membership) => ({ id: membership.community_id, name: membership.community_name || membership.name || 'Joined community' })),
-  }), [memberships, user]);
+    joinedCommunities: resolvePublishingCommunities(memberships, communities),
+  }), [communities, memberships, user]);
 
   React.useEffect(() => {
     if (!initialType || draft) return;
