@@ -90,4 +90,3 @@ Implementation uses test-driven development. Required proof before merge:
 - Invented reviews, news, traffic, events, or community activity.
 - Replacing Supabase, Vercel, Leaflet, or the existing publishing architecture.
 - New monetization, native iOS work, streaks, or unrelated roadmap features.
-
