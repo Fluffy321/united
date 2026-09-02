@@ -44,6 +44,53 @@ const MAP_TYPE_BY_CATEGORY = {
   therapists: 'wellness',
 };
 
+const CATEGORY_LABELS = {
+  shuls: 'Shuls & minyanim',
+  minyanim: 'Minyanim',
+  mikvahs: 'Mikvahs',
+  eruvs: 'Eruv',
+  'torah-learning': 'Torah learning',
+  restaurants: 'Kosher restaurants',
+  groceries: 'Kosher groceries',
+  bakeries: 'Kosher bakeries',
+  catering: 'Kosher catering',
+  schools: 'Schools',
+  camps: 'Camps',
+  childcare: 'Childcare',
+  tutors: 'Tutors',
+  judaica: 'Judaica',
+  clothing: 'Clothing',
+  gifts: 'Gifts',
+  florists: 'Florists',
+  doctors: 'Doctors',
+  dentists: 'Dentists',
+  therapists: 'Therapists',
+  pharmacies: 'Pharmacies',
+  wellness: 'Wellness',
+  'home-services': 'Home services',
+  'car-services': 'Car services',
+  'real-estate': 'Real estate',
+  lawyers: 'Lawyers',
+  accountants: 'Accountants',
+  chesed: 'Chesed',
+  simcha: 'Simcha services',
+  'community-resources': 'Community resources',
+  attractions: 'Attractions',
+  activities: 'Activities',
+  fitness: 'Fitness',
+};
+
+const GROUP_LABELS = {
+  'jewish-life': 'Jewish life',
+  food: 'Food',
+  family: 'Family',
+  shopping: 'Shopping',
+  health: 'Health',
+  services: 'Services',
+  community: 'Community',
+  'things-to-do': 'Things to do',
+};
+
 function clean(value) {
   return String(value || '').trim();
 }
@@ -192,6 +239,12 @@ export function filterDirectoryCatalog(listings = [], filters = {}) {
     ].map(clean).join(' ').toLowerCase();
     return haystack.includes(query);
   });
+}
+
+export function directoryListingLabel(listing = {}) {
+  return CATEGORY_LABELS[listing.categoryId]
+    || GROUP_LABELS[listing.groupId]
+    || 'Local listing';
 }
 
 export function directoryListingToMapPoint(listing = {}) {

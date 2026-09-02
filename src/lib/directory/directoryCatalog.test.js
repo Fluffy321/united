@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   directoryListingToMapPoint,
+  directoryListingLabel,
   filterDirectoryCatalog,
   mergeDirectoryListings,
   normalizeSubmittedBusiness,
@@ -77,6 +78,13 @@ describe('directory catalog', () => {
       kosher_status: 'certified',
       kosher_certifying_agency: 'Five Towns Vaad',
     }).kosher).toBe(true);
+  });
+
+  it('gives trusted places a clear human category label', () => {
+    expect(directoryListingLabel({ groupId: 'jewish-life', categoryId: 'shuls' })).toBe('Shuls & minyanim');
+    expect(directoryListingLabel({ groupId: 'food', categoryId: 'bakeries' })).toBe('Kosher bakeries');
+    expect(directoryListingLabel({ groupId: 'family', categoryId: 'schools' })).toBe('Schools');
+    expect(directoryListingLabel({ groupId: 'things-to-do', categoryId: 'activities' })).toBe('Activities');
   });
 
   it('keeps trusted records and excludes unpublished submissions', () => {

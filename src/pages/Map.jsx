@@ -41,6 +41,7 @@ import { createBusinessClaimRequest, createBusinessListing, filterBusinessClaimR
 import { postKeys } from '@/lib/queryKeys';
 import { FIVE_TOWNS_LISTINGS } from '@/lib/directory/fiveTownsDirectory';
 import {
+  directoryListingLabel,
   directoryListingToMapPoint,
   filterDirectoryCatalog,
   mergeDirectoryListings,
@@ -74,6 +75,18 @@ const BUSINESS_CATEGORIES = [
   { key: 'mikvahs',          label: 'Mikvahs',                     shortLabel: 'Mikvahs',    icon: MapPin,      iconBg: 'bg-teal-50',     iconColor: 'text-teal-600',    labelColor: 'text-teal-700',    barColor: 'bg-teal-400',    chipActive: 'bg-teal-600 text-white border-teal-600',     chipInactive: 'bg-white text-slate-600 border-slate-200' },
   { key: 'eruv',             label: 'Eruv',                        shortLabel: 'Eruv',       icon: MapIcon,     iconBg: 'bg-indigo-50',   iconColor: 'text-indigo-600',  labelColor: 'text-indigo-700',  barColor: 'bg-indigo-500',  chipActive: 'bg-indigo-600 text-white border-indigo-600', chipInactive: 'bg-white text-slate-600 border-slate-200' },
   { key: 'vacation_rentals', label: 'Vacation Rentals',            shortLabel: 'Rentals',    icon: HomeIcon,    iconBg: 'bg-lime-50',     iconColor: 'text-lime-700',    labelColor: 'text-lime-700',    barColor: 'bg-lime-400',    chipActive: 'bg-lime-600 text-white border-lime-600',     chipInactive: 'bg-white text-slate-600 border-slate-200' },
+];
+
+const DIRECTORY_GROUP_FILTERS = [
+  { key: 'all', label: 'All', groupId: '', icon: LayoutGrid },
+  { key: 'jewish-life', label: 'Jewish life', groupId: 'jewish-life', icon: Sparkles },
+  { key: 'food', label: 'Food', groupId: 'food', icon: Utensils },
+  { key: 'family', label: 'Family', groupId: 'family', icon: Baby },
+  { key: 'shopping', label: 'Shopping', groupId: 'shopping', icon: Gift },
+  { key: 'health', label: 'Health', groupId: 'health', icon: HeartPulse },
+  { key: 'services', label: 'Services', groupId: 'services', icon: Wrench },
+  { key: 'community', label: 'Community', groupId: 'community', icon: UsersRound },
+  { key: 'things-to-do', label: 'Things to do', groupId: 'things-to-do', icon: Star },
 ];
 
 const LEGACY_CATEGORY_ALIASES = {
@@ -139,6 +152,7 @@ function directoryListingToBusinessRecord(listing) {
     name: listing.name,
     description: listing.description,
     category: submitted.category || directoryBusinessCategory(listing),
+    directory_label: directoryListingLabel(listing),
     directory_group_id: listing.groupId,
     directory_category_id: listing.categoryId,
     listing_type: listing.listingType || 'physical',
@@ -315,7 +329,9 @@ function TrustBadges({ business, showDisclaimer = false }) {
       </div>
       {showDisclaimer && business.kosher_status === 'certified' && (
         <p className="mt-1.5 text-[10px] font-medium text-slate-400">
-          Kosher status is self-reported by the business and reviewed by JUnited staff for plausibility only. JUnited is not a kashrus authority and does not independently verify certifications — contact the listed agency directly to confirm.
+          {business.source_kind === 'submitted'
+            ? 'Kosher status was submitted by the business. Confirm with the listed agency before relying on it.'
+            : 'Kosher status comes from the linked source. Confirm with the listed agency before relying on it.'}
         </p>
       )}
     </div>
@@ -366,7 +382,7 @@ function BusinessCard({ business, onView, onClaim }) {
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <h3 className="truncate text-base font-black text-slate-950">{business.name}</h3>
-                <p className={`mt-0.5 text-[11px] font-black uppercase tracking-wider ${cat.labelColor}`}>{cat.label}</p>
+                <p className={`mt-0.5 text-[11px] font-black uppercase tracking-wider ${cat.labelColor}`}>{business.directory_label || cat.label}</p>
               </div>
               {isVerifiedOwner && (
                 <span className="shrink-0 rounded-full bg-blue-50 p-1.5 ring-1 ring-blue-100">
@@ -764,7 +780,7 @@ function BusinessDetailModal({ business, onClose, onClaim }) {
               <Store className="h-7 w-7" />
             </div>
             <div>
-              <p className="text-xs font-black uppercase tracking-wide text-blue-700">{businessCategory(business.category).label}</p>
+              <p className="text-xs font-black uppercase tracking-wide text-blue-700">{business.directory_label || businessCategory(business.category).label}</p>
               <h2 className="mt-1 text-xl font-black text-slate-950">{business.name}</h2>
               <TrustBadges business={business} showDisclaimer />
             </div>
@@ -1105,7 +1121,8 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
   );
   const [catalogScope, setCatalogScope] = useState(initialScope);
   const [type, setType] = useState('all');
-  const [mode, setMode] = useState(placeParam ? 'map' : 'list');
+  const [mode, setMode] = useState('list');
+  const [openedPlaceParam, setOpenedPlaceParam] = useState('');
   const [showSubmit, setShowSubmit] = useState(false);
   const [showOwnerTools, setShowOwnerTools] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState(null);
@@ -1183,6 +1200,19 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
     if (category !== 'all' && !normalizedCategory) return false;
     return true;
   }), [category, filteredListings]);
+
+  useEffect(() => {
+    if (!placeParam || isLoading || openedPlaceParam === placeParam) return;
+    const normalizedPlace = placeParam.trim().toLowerCase();
+    const matchedBusiness = filteredBusinesses.find(
+      (business) => String(business.name || '').trim().toLowerCase() === normalizedPlace,
+    ) || filteredBusinesses[0];
+    if (matchedBusiness) {
+      setMode('list');
+      setSelectedBusiness(matchedBusiness);
+      setOpenedPlaceParam(placeParam);
+    }
+  }, [filteredBusinesses, isLoading, openedPlaceParam, placeParam]);
 
   const directoryPoints = useMemo(
     () => filteredListings.map(directoryListingToMapPoint).filter(Boolean),
@@ -1267,25 +1297,27 @@ function BusinessDirectoryExperience({ userLocation, locationStatus, currentUser
         </section>
       )}
 
-      <section data-testid="directory-categories" aria-label="Business categories" className="mt-3">
+      <section data-testid="directory-categories" aria-label="Directory categories" className="mt-3">
         <p className="px-1 text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">Browse categories</p>
         <div className="mobile-scroll-x mt-2 flex gap-2 pb-1">
-          {BUSINESS_CATEGORIES.map((cat) => {
+          {DIRECTORY_GROUP_FILTERS.map((cat) => {
             const CatIcon = cat.icon;
-            const isActive = category === cat.key;
+            const isActive = cat.groupId
+              ? catalogScope.groupId === cat.groupId && category === 'all'
+              : !catalogScope.groupId && !catalogScope.categoryId && category === 'all';
             return (
               <button
                 key={cat.key}
                 type="button"
                 aria-pressed={isActive}
                 onClick={() => {
-                  setCatalogScope({});
-                  setCategory(cat.key);
+                  setCategory('all');
+                  setCatalogScope(cat.groupId ? { groupId: cat.groupId } : {});
                 }}
                 className={`app-chip motion-press min-h-11 shrink-0 ${isActive ? 'app-chip-active' : ''}`}
               >
-                <CatIcon className={`h-4 w-4 ${isActive ? 'text-current opacity-90' : cat.iconColor}`} />
-                <span className="text-[11px] font-black leading-tight">{cat.shortLabel}</span>
+                <CatIcon className={`h-4 w-4 ${isActive ? 'text-current opacity-90' : 'text-slate-500'}`} />
+                <span className="text-[11px] font-black leading-tight">{cat.label}</span>
               </button>
             );
           })}
