@@ -69,7 +69,7 @@ export default function CreateCommunityFlow({ onCreate, onClose }) {
                   Everything else can be tuned later in community settings.
                 </p>
               </div>
-              <button type="button" onClick={onClose} className="rounded-full border border-slate-200 bg-white p-2 text-slate-400 hover:bg-slate-50">
+              <button type="button" onClick={onClose} aria-label="Close create community" className="rounded-full border border-slate-200 bg-white p-2 text-slate-400 hover:bg-slate-50">
                 <X className="h-4 w-4" />
               </button>
             </div>

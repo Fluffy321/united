@@ -1,62 +1,30 @@
-import { useLocation } from 'react-router-dom';
-import { useAuth } from '@/lib/AuthContext';
+import { Home, Search } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-export default function PageNotFound({}) {
-    const location = useLocation();
-    const pageName = location.pathname.substring(1);
-    const { user, isAuthenticated } = useAuth();
-    
-    return (
-        <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50">
-            <div className="max-w-md w-full">
-                <div className="text-center space-y-6">
-                    {/* 404 Error Code */}
-                    <div className="space-y-2">
-                        <h1 className="text-7xl font-light text-slate-300">404</h1>
-                        <div className="h-0.5 w-16 bg-slate-200 mx-auto"></div>
-                    </div>
-                    
-                    {/* Main Message */}
-                    <div className="space-y-3">
-                        <h2 className="text-2xl font-medium text-slate-800">
-                            Page Not Found
-                        </h2>
-                        <p className="text-slate-600 leading-relaxed">
-                            The page <span className="font-medium text-slate-700">"{pageName}"</span> could not be found in this application.
-                        </p>
-                    </div>
-                    
-                    {/* Admin Note */}
-                    {isAuthenticated && user?.role === 'admin' && (
-                        <div className="mt-8 p-4 bg-slate-100 rounded-lg border border-slate-200">
-                            <div className="flex items-start space-x-3">
-                                <div className="flex-shrink-0 w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center mt-0.5">
-                                    <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-                                </div>
-                                <div className="text-left space-y-1">
-                                    <p className="text-sm font-medium text-slate-700">Admin Note</p>
-                                    <p className="text-sm text-slate-600 leading-relaxed">
-                                        This could mean that the AI hasn't implemented this page yet. Ask it to implement it in the chat.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                    
-                    {/* Action Button */}
-                    <div className="pt-6">
-                        <button 
-                            onClick={() => window.location.href = '/Feed'} 
-                            className="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
-                        >
-                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                            </svg>
-                            Go to Feed
-                        </button>
-                    </div>
-                </div>
-            </div>
+export function PageNotFoundView() {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-[#F6F8FC] px-5 pb-[max(24px,env(safe-area-inset-bottom))] pt-[max(24px,env(safe-area-inset-top))] text-slate-950">
+      <section className="w-full max-w-sm rounded-[28px] border border-slate-200 bg-white p-6 text-center shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+          <Search className="h-6 w-6" aria-hidden="true" />
         </div>
-    )
+        <p className="mt-5 text-[11px] font-black uppercase tracking-[0.2em] text-blue-600">Page not found</p>
+        <h1 className="mt-2 text-[28px] font-black leading-tight tracking-[-0.04em]">We couldn’t find that page</h1>
+        <p className="mt-3 text-sm font-medium leading-6 text-slate-600">
+          The link may be old or the page may have moved. Your JUnited account and information are safe.
+        </p>
+        <Link
+          to="/Feed"
+          className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#0A1838] px-4 text-sm font-black text-white transition active:scale-[0.98]"
+        >
+          <Home className="h-4 w-4" aria-hidden="true" />
+          Back to Home
+        </Link>
+      </section>
+    </main>
+  );
+}
+
+export default function PageNotFound() {
+  return <PageNotFoundView />;
 }
