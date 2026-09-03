@@ -140,7 +140,7 @@ function LayoutContent({ children, currentPageName }) {
         )}
       </main>
 
-      {!hideNav && currentUser && currentPageName !== 'Feed' && (
+      {!hideNav && currentUser && currentPageName !== 'Feed' && currentPageName !== 'Map' && (
         <div className="app-fixed-layer">
           <div className="app-fixed-frame">
             <div className="app-floating-stack">
