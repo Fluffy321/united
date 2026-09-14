@@ -1,4 +1,4 @@
-import { supabaseBackend } from './supabaseRepository';
+import { filterSelectableUsers, supabaseBackend } from './supabaseRepository';
 
 // Named entity operations used while call sites migrate to domain-specific services.
 export const createAppFeedback = (...args) => supabaseBackend.entities.AppFeedback.create(...args);
@@ -166,6 +166,9 @@ export const getUnifiedPost = (...args) => supabaseBackend.entities.UnifiedPost.
 export const listUnifiedPost = (...args) => supabaseBackend.entities.UnifiedPost.list(...args);
 export const updateUnifiedPost = (...args) => supabaseBackend.entities.UnifiedPost.update(...args);
 export const filterUser = (...args) => supabaseBackend.entities.User.filter(...args);
+// People-picker variant of filterUser — excludes deleted accounts. See
+// filterSelectableUsers in supabaseRepository.js for when to use which.
+export { filterSelectableUsers };
 export const listUser = (...args) => supabaseBackend.entities.User.list(...args);
 export const createUserCommunity = (...args) => supabaseBackend.entities.UserCommunity.create(...args);
 export const deleteUserCommunity = (...args) => supabaseBackend.entities.UserCommunity.delete(...args);

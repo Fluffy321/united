@@ -1,4 +1,5 @@
 import { supabase, shouldUseSupabase } from '@/api/supabaseClient';
+import { PUBLIC_PROFILE_SELECT_MINIMAL } from './supabaseRepository';
 import { notificationsService } from './notificationsService';
 
 // Relationship statuses returned by getRelationship()
@@ -15,16 +16,15 @@ async function callRpc(name, params) {
   return data;
 }
 
-const PUBLIC_PROFILE_SELECT = 'id, display_name, avatar_url, username, city';
-
 async function loadPublicProfileMap(userIds = []) {
   const ids = [...new Set(userIds.filter(Boolean))];
   if (ids.length === 0) return new Map();
 
   const { data, error } = await supabase
     .from('public_profiles')
-    .select(PUBLIC_PROFILE_SELECT)
-    .in('id', ids);
+    .select(PUBLIC_PROFILE_SELECT_MINIMAL)
+    .in('id', ids)
+    .is('deleted_at', null);
 
   if (error) throw error;
 

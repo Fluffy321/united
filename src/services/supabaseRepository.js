@@ -98,7 +98,11 @@ const SUPABASE_ENTITY_TABLES = {
 };
 
 const PUBLIC_PROFILE_ENTITIES = new Set(['User', 'Profile']);
-const PUBLIC_PROFILE_SELECT = 'id,display_name,avatar_url,cover_url,username,public_community,city,bio,age_range,is_verified,verified_type,communities_joined_count,helper_actions_count,is_profile_complete,created_at,updated_at';
+export const PUBLIC_PROFILE_SELECT = 'id,display_name,avatar_url,cover_url,username,public_community,city,bio,age_range,is_verified,verified_type,communities_joined_count,helper_actions_count,is_profile_complete,created_at,updated_at,deleted_at';
+// Identity-only subset for bulk hydration (friends lists, request rows) where the
+// full profile payload would be wasted. deleted_at is included so callers can
+// filter or badge without a second round-trip.
+export const PUBLIC_PROFILE_SELECT_MINIMAL = 'id,display_name,avatar_url,username,city,deleted_at';
 
 const demoUser = {
   id: 'local-demo',
@@ -1050,6 +1054,8 @@ const createSupabaseEntityApi = (entityName) => {
     async list(sort, limit = 100, offset = 0) {
       return runWithLocalFallback(async () => {
         let query = supabase.from(readTable).select(readSelect).range(offset, offset + limit - 1);
+        // People lists must never surface anonymized deleted accounts.
+        if (PUBLIC_PROFILE_ENTITIES.has(entityName)) query = query.is('deleted_at', null);
         if (sort) {
           const ascending = !sort.startsWith('-');
           query = query.order(toDbField(sort.replace(/^-/, '')), { ascending });
@@ -1131,6 +1137,52 @@ const createSupabaseEntityApi = (entityName) => {
       return () => supabase.removeChannel(channel);
     },
   };
+};
+
+/**
+ * Profile lookup for people-PICKERS — anywhere the result becomes a selectable
+ * person (user search, friend suggestions, invite flows, @-mention lists).
+ *
+ * Identical to entities.User.filter() except that anonymized deleted accounts
+ * are excluded. Use this whenever the user can ACT on the returned person.
+ *
+ * Do NOT use it for attribution (post/comment authors, conversation
+ * participants, blocked-user lists, mitzvah requesters). Those render a
+ * relationship that already exists and must keep resolving after the account
+ * is deleted — use entities.User.filter() there, which is deliberately
+ * unfiltered.
+ */
+export const filterSelectableUsers = async (filter = {}, sort, limit = 100) => {
+  const localApi = createEntityApi('User');
+  const localFallback = async () => {
+    const rows = await localApi.filter(filter, sort, limit);
+    return rows.filter((row) => !row.deleted_at);
+  };
+
+  if (!shouldUseSupabase || !supabase) return localFallback();
+
+  return runWithLocalFallback(async () => {
+    let query = supabase
+      .from('public_profiles')
+      .select(PUBLIC_PROFILE_SELECT)
+      .is('deleted_at', null)
+      .limit(limit);
+
+    Object.entries(filter || {}).forEach(([key, value]) => {
+      const dbKey = toDbField(key);
+      if (Array.isArray(value)) query = query.contains(dbKey, value);
+      else query = query.eq(dbKey, value);
+    });
+
+    if (sort) {
+      const ascending = !sort.startsWith('-');
+      query = query.order(toDbField(sort.replace(/^-/, '')), { ascending });
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data || []).map(toAppRow);
+  }, localFallback, 'SelectableUsers');
 };
 
 const supabaseEntities = new Proxy({}, {

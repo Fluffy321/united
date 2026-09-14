@@ -43,6 +43,7 @@ export default function Profile() {
   const queryClient = useQueryClient();
   const [profileUser, setProfileUser] = useState(null);
   const [profileLoadError, setProfileLoadError] = useState(false);
+  const [profileNotFound, setProfileNotFound] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(true);
   const [showInterestPicker, setShowInterestPicker] = useState(false);
@@ -57,6 +58,7 @@ export default function Profile() {
 
   useEffect(() => {
     setProfileLoadError(false);
+    setProfileNotFound(false);
     loadProfile();
   }, [searchParams, currentUser?.id]);
 
@@ -72,12 +74,16 @@ export default function Profile() {
             setProfileUser(users[0]);
             setIsOwnProfile(false);
           } else {
-            setProfileUser(currentUser);
-            setIsOwnProfile(true);
+            // No such profile. Showing the viewer their own profile here made a
+            // missing/unreachable id look like a successful load of themselves.
+            setProfileUser(null);
+            setIsOwnProfile(false);
+            setProfileNotFound(true);
           }
         } catch {
-          setProfileUser(currentUser);
-          setIsOwnProfile(true);
+          setProfileUser(null);
+          setIsOwnProfile(false);
+          setProfileNotFound(true);
         }
       } else {
         setProfileUser(currentUser);
@@ -337,6 +343,26 @@ export default function Profile() {
       }
     }
   };
+
+  if (profileNotFound) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <div className="w-full max-w-sm text-center">
+          <h1 className="text-lg font-black text-slate-900">Profile not found</h1>
+          <p className="mt-2 text-sm text-slate-500">
+            This profile doesn&apos;t exist or is no longer available.
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate('/Feed')}
+            className="mt-5 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-bold text-white"
+          >
+            Back to Feed
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (profileLoadError) {
     return (
