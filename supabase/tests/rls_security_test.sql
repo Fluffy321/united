@@ -4,9 +4,12 @@
 --
 -- One check is EXPECTED to fail today:
 --   "public_profiles is security_invoker"
--- Migration 016 set it true; 20260701230000 used CREATE OR REPLACE VIEW and
--- silently dropped it. Fixing requires adding a public-read policy to profiles
--- first, or the app loses all names and avatars.
+-- This is deliberate, not a regression. 20260701230000_public_profiles_deleted_at.sql:6
+-- explicitly sets security_invoker = false so the view can bypass RLS on profiles.
+-- It has to: the only SELECT policy on profiles is auth.uid() = id, so invoker mode
+-- would return zero rows for every other user and blank every name and avatar in the app.
+-- Do NOT flip this without first adding a public-read policy to profiles.
+-- The check exists to make sure the decision stays visible and intentional.
 --
 -- Any OTHER failure is a regression. Investigate before shipping.
 
