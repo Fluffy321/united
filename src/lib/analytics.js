@@ -1,12 +1,15 @@
 /**
  * Analytics & error tracking stub.
  *
- * Wires up to Sentry and PostHog when the env vars are set AND the packages
- * are installed.  Silently no-ops otherwise — the app never fails because
- * analytics isn't available.
+ * Wires up to Sentry and PostHog when the env vars are set.  Silently no-ops
+ * otherwise — the app never fails because analytics isn't configured.
  *
- * To enable Sentry:  npm install @sentry/react  + set VITE_SENTRY_DSN
- * To enable PostHog: npm install posthog-js     + set VITE_POSTHOG_KEY
+ * Both SDKs are real dependencies, loaded through dynamic import() with a
+ * literal specifier so Vite code-splits them into their own chunks. Nothing is
+ * downloaded until consent is granted AND the matching env var is present.
+ *
+ * To enable Sentry:  set VITE_SENTRY_DSN
+ * To enable PostHog: set VITE_POSTHOG_KEY
  *
  * Consent rules:
  * - initAnalytics() (called at startup) checks stored consent and does nothing
@@ -86,19 +89,13 @@ async function currentUserId() {
   }
 }
 
-function optionalImport(packageName) {
-  // Keep optional analytics packages out of Vite's build-time resolver.
-  const importer = new Function('packageName', 'return import(packageName)');
-  return importer(packageName);
-}
-
 // ── Sentry ────────────────────────────────────────────────────────────────────
 
 async function loadSentry() {
   const dsn = import.meta.env.VITE_SENTRY_DSN;
   if (!dsn) return;
   try {
-    const mod = await optionalImport('@sentry/react');
+    const mod = await import('@sentry/react');
     mod.init({
       dsn,
       environment: import.meta.env.MODE,
@@ -116,7 +113,7 @@ async function loadSentry() {
     });
     sentry = mod;
   } catch {
-    // Sentry package not installed or failed to init — safe to ignore.
+    // Sentry failed to load or init — analytics must never break the app.
   }
 }
 
@@ -185,7 +182,7 @@ async function loadPostHog() {
   const host = import.meta.env.VITE_POSTHOG_HOST || 'https://app.posthog.com';
   if (!key) return;
   try {
-    const mod = await optionalImport('posthog-js');
+    const mod = await import('posthog-js');
     const ph = mod.default || mod;
     ph.init(key, {
       api_host: host,
@@ -197,7 +194,7 @@ async function loadPostHog() {
     // posthog.has_opted_out_capturing() returns true if the user previously opted out.
     posthog = ph;
   } catch {
-    // posthog-js not installed — safe to ignore.
+    // PostHog failed to load or init — analytics must never break the app.
   }
 }
 
