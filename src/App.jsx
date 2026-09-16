@@ -90,6 +90,8 @@ const Notifications           = lazy(() => import('@/pages/Notifications'));
 const SupportJUnited          = lazy(() => import('@/pages/SupportJUnited'));
 const ThankYou                = lazy(() => import('@/pages/ThankYou'));
 const Publish                 = lazy(() => import('@/pages/Publish'));
+// TEMPORARY — Sentry delivery check. Remove with the /sentry-test route below.
+const SentryTest              = lazy(() => import('@/pages/SentryTest'));
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -238,6 +240,9 @@ const AuthenticatedApp = () => {
               <Route key={path} path={path} element={<Navigate to={mainPagePath} replace />} />
             ))}
             <Route path="/ThankYou" element={<PageTransition><AppErrorBoundary inline><ThankYou /></AppErrorBoundary></PageTransition>} />
+
+            {/* TEMPORARY — Sentry delivery check. Not in any nav. Remove once verified. */}
+            <Route path="/sentry-test" element={<PageTransition><AppErrorBoundary inline><SentryTest /></AppErrorBoundary></PageTransition>} />
           </Route>
           <Route path="*" element={<PageNotFound />} />
         </Routes>
