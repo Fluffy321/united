@@ -161,3 +161,55 @@ probably where the expectation came from.
 database. Read at `src/pages/MitzvahCircle.jsx:105`, `:277`, `:295`, `:347`,
 `:425`, `:431`, `src/components/mitzvah/circle/QuickViewSheet.jsx:13`, `:101`,
 and `src/components/mitzvah/circle/RequestCard.jsx:45`.
+
+## Making the strip loud — deferred plan
+
+The obvious fix is to replace the `console.warn` in `createWithSchemaRetry`
+(`src/services/supabaseRepository.js:872`) and `updateWithSchemaRetry` (`:898`)
+with a `captureError` call, so a stripped column reaches Sentry and
+`error_logs` instead of only a devtools console. Mechanically that is three
+lines — four counting the same pattern in `updateProfileWithSchemaRetry`
+(`:845`).
+
+**Do not do that first.** The strip path is load-bearing, not exceptional.
+`toDbPatch` (`:696-703`) adds canonical aliases without deleting the originals:
+
+```
+if (patch.created_date && !patch.created_at) patch.created_at = patch.created_date;
+if (patch.updated_date && !patch.updated_at) patch.updated_at = patch.updated_date;
+if (patch.cityPreset && !patch.city) patch.city = patch.cityPreset;
+```
+
+`updated_date` and `cityPreset` are not columns on any table. `toAppRow`
+(`:669-671`) then synthesizes `created_date`/`updated_date` onto every row it
+returns, so the ordinary read-edit-write round trip sends `updated_date` on
+every write and has it stripped on every write. 26 call sites pass
+`created_date:` explicitly. `MitzvahRequest` is the only entity whose block
+deletes its aliases after mapping (`:712-714`); the other 64 entity names in
+`SUPABASE_ENTITY_TABLES` do not.
+
+Every write in the app funnels through these two helpers — 65 entity names, 84
+create/update/bulkCreate wrappers in `entityServices.js`, two call sites
+(`:1097`, `:1115`). Making the strip loud before fixing the aliases would
+surface a steady background rate of expected strips across most writes and bury
+the two real findings above in it, while sending that volume to a Sentry
+pipeline that is now actually wired up.
+
+Sequence:
+
+1. **Measure first.** Route the existing warn to `captureError` at a low sample
+   rate, or to a plain counter rather than an issue per occurrence. Collect the
+   real rate and the distribution of stripped column names for about a week.
+   Cheap, reversible, and it answers the only question that decides the rest.
+   The rate is not knowable from the code — nobody has ever collected it,
+   because `console.warn` never leaves the browser.
+2. **Fix the aliases.** Make `toDbPatch` delete its alias keys the way the
+   `MitzvahRequest` block already does, and stop `toAppRow` from synthesizing
+   `updated_date` into values that get written back. This should collapse
+   expected-strip traffic to near zero.
+3. **Then make it loud.** Once a strip means a real mismatch, promote it to
+   `captureError` at full rate. At that point the signal is worth an alert.
+
+The 8-attempt retry loop stays regardless of what happens to the logging. It
+also guards against Supabase's schema cache lagging a freshly applied
+migration, which is a real transient condition unrelated to these gaps.
