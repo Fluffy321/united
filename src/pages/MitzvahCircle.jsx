@@ -112,12 +112,9 @@ export default function MitzvahCircle() {
 	    queryFn: async () => {
 	      const rows = await mitzvahService.listRequests({}, '-created_date', 200);
 	      const list = Array.isArray(rows) ? rows : [];
-	      const expired = list.filter(isRequestExpired);
-	      if (expired.length > 0) {
-	        Promise.allSettled(expired.map((request) => mitzvahService.deleteRequest(request.id)))
-	          .then(() => queryClient.invalidateQueries({ queryKey: ['mitzvah-requests'] }))
-	          .catch(() => {});
-	      }
+	      // Display-only filter. Expired requests stay in the database — this page
+	      // used to hard-delete them on load, which meant whoever happened to open
+	      // it destroyed other people's rows. Aging out is a server concern.
 	      return list.filter((request) => !isRequestExpired(request));
 	    },
 	    staleTime: 30000,
