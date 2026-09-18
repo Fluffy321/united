@@ -90,6 +90,7 @@ const Notifications           = lazy(() => import('@/pages/Notifications'));
 const SupportJUnited          = lazy(() => import('@/pages/SupportJUnited'));
 const ThankYou                = lazy(() => import('@/pages/ThankYou'));
 const Publish                 = lazy(() => import('@/pages/Publish'));
+const PublicMealTrain         = lazy(() => import('@/pages/PublicMealTrain'));
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -176,6 +177,9 @@ const AuthenticatedApp = () => {
           <Route path="/" element={<Navigate to={APP_ENTRY_PATH} replace />} />
           <Route path="/welcome" element={<Navigate to={LEGACY_WELCOME_REDIRECT_PATH} replace />} />
           <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
+          {/* Public — shareable meal train. Deliberately outside ProtectedRoute;
+              all data comes from the by-id public_meal_train* RPCs. */}
+          <Route path="/meals/:id" element={<PageTransition><AppErrorBoundary inline><PublicMealTrain /></AppErrorBoundary></PageTransition>} />
           <Route path="/Jewish" element={<Navigate to="/Feed" replace />} />
           <Route path="/tehillim" element={<Navigate to="/Feed" replace />} />
           {LEGACY_MAP_ROUTES.map((path) => (
