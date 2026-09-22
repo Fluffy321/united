@@ -2,12 +2,14 @@ import React, { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, eachDayOfInterval, parseISO } from 'date-fns';
-import { CalendarDays, CheckCircle2, ChefHat, Loader2, Plus, UtensilsCrossed, X } from 'lucide-react';
+import { CalendarDays, CheckCircle2, ChefHat, Loader2, Plus, Share2, UtensilsCrossed, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { notificationsService } from '@/services';
 import { supabase } from '@/api/supabaseClient';
 import { appParams } from '@/lib/app-params';
 import { bulkCreateMealSlot, createMealSlot, createMealTrainRequest, filterMealTrainRequest, listMealSlot } from '@/services/entityServices';
+
+const PUBLIC_ORIGIN = 'https://junited.us';
 
 const MEAL_TYPES = [
   { value: 'dinner', label: 'Dinner' },
@@ -145,9 +147,35 @@ function CreateMealTrainModal({ open, onClose, onCreate, isLoading }) {
   );
 }
 
+// The public page is the canonical share target — it shows dates and open days
+// to anyone, and discloses the address only to someone who has claimed a slot.
+const publicMealTrainUrl = (trainId) => `${PUBLIC_ORIGIN}/meals/${encodeURIComponent(trainId)}`;
+
 function MealTrainCard({ train, slots, currentUser, onClaim, onRelease, claimingSlotId }) {
   const claimedCount = slots.filter((s) => s.claimed_by).length;
   const isCreator = currentUser?.id === train.created_by;
+
+  const handleShare = async () => {
+    const url = publicMealTrainUrl(train.id);
+    const text = `Help bring a meal for ${train.family_name}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'JUnited meal train', text, url });
+        return;
+      }
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        toast.success('Link copied — share it with neighbors.');
+        return;
+      }
+      toast.error('Sharing is not available in this browser');
+    } catch (err) {
+      // The user dismissing the native share sheet rejects with AbortError.
+      // That is a cancellation, not a failure — stay quiet.
+      if (err?.name === 'AbortError') return;
+      toast.error('Could not share this meal train');
+    }
+  };
 
   return (
     <div className="rounded-[18px] border border-slate-200 bg-white p-3 shadow-sm">
@@ -163,6 +191,14 @@ function MealTrainCard({ train, slots, currentUser, onClaim, onRelease, claiming
           </p>
           {train.notes && <p className="mt-1 text-[12px] leading-5 text-slate-500">{train.notes}</p>}
         </div>
+        <button
+          type="button"
+          onClick={handleShare}
+          aria-label={`Share the meal train for ${train.family_name}`}
+          className="motion-press flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50"
+        >
+          <Share2 className="h-4 w-4" />
+        </button>
       </div>
 
       <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
