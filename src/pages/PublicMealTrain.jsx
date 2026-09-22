@@ -5,8 +5,9 @@
  * comes from the public_meal_train / public_meal_train_slots RPCs, which are
  * by-id only and open-trains only, and which never return the delivery
  * address, contact phone, creator identity, free-text notes, or claimer names.
- * There is no privileged branch on this page: a signed-in viewer sees exactly
- * the same payload as an anonymous one.
+ * The one privileged branch is meal_train_for_claimer, which returns the
+ * delivery address and phone only to a caller who holds a claimed slot on this
+ * train. Everyone else — signed in or not — sees the anonymous payload.
  *
  * Claiming requires auth. A logged-out visitor tapping an open slot is sent to
  * /login with a from_url carrying ?slot=<uuid> — a query param, not a hash,
@@ -17,7 +18,7 @@ import { useMemo, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
-import { CalendarDays, CheckCircle2, ChefHat, Loader2, Lock, UtensilsCrossed } from 'lucide-react';
+import { CalendarDays, CheckCircle2, ChefHat, Loader2, Lock, MapPin, Phone, UtensilsCrossed } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/api/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
@@ -75,6 +76,18 @@ export default function PublicMealTrain() {
     enabled: Boolean(id && supabase && train),
   });
 
+  // Privileged read. Returns a row only when auth.uid() holds a claimed slot on
+  // this train; anon is not granted EXECUTE at all, so this never fires for them.
+  const { data: claimerDetails, refetch: refetchClaimerDetails } = useQuery({
+    queryKey: ['meal-train-claimer-details', id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('meal_train_for_claimer', { p_train_id: id });
+      if (error) throw error;
+      return (data || [])[0] || null;
+    },
+    enabled: Boolean(id && supabase && isAuthenticated && train),
+  });
+
   const { openCount, takenCount } = useMemo(() => ({
     openCount: slots.filter((slot) => !slot.is_claimed).length,
     takenCount: slots.filter((slot) => slot.is_claimed).length,
@@ -105,6 +118,9 @@ export default function PublicMealTrain() {
       if (error) throw error;
       toast.success(`You're bringing a meal on ${safeDate(slot.slot_date, 'EEE M/d') || 'that day'}!`);
       queryClient.invalidateQueries({ queryKey: ['public-meal-train-slots', id] });
+      // The claim is what unlocks the delivery details — refetch so they appear
+      // without a reload.
+      await refetchClaimerDetails();
     } catch (err) {
       // claim_meal_slot raises a readable message — surface it verbatim.
       toast.error(err?.message || 'Could not claim this day');
@@ -240,6 +256,34 @@ export default function PublicMealTrain() {
             </ul>
           )}
         </div>
+
+        {claimerDetails && (claimerDetails.delivery_address || claimerDetails.contact_phone) && (
+          <div className="rounded-[24px] border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
+            <p className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wide text-emerald-700">
+              <CheckCircle2 className="h-3.5 w-3.5" /> Delivery details
+            </p>
+            <p className="mt-1 text-[12px] font-semibold text-emerald-800/80">
+              Shared with you because you claimed a day.
+            </p>
+            <div className="mt-3 space-y-2">
+              {claimerDetails.delivery_address && (
+                <p className="flex items-start gap-2 text-[14px] font-bold leading-5 text-emerald-950">
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                  {claimerDetails.delivery_address}
+                </p>
+              )}
+              {claimerDetails.contact_phone && (
+                <a
+                  href={`tel:${claimerDetails.contact_phone}`}
+                  className="flex items-center gap-2 text-[14px] font-bold text-emerald-950 underline"
+                >
+                  <Phone className="h-4 w-4 shrink-0 text-emerald-600" />
+                  {claimerDetails.contact_phone}
+                </a>
+              )}
+            </div>
+          </div>
+        )}
 
         {!isAuthenticated && (
           <div className="rounded-[24px] border border-slate-100 bg-white p-4 text-center shadow-sm">
