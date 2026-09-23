@@ -41,3 +41,4 @@ ios/App/Pods
 
 # Isolated implementation worktrees
 .worktrees/
+base44/.app.jsonc
