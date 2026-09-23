@@ -1,0 +1,44 @@
+{
+  "name": "Auto-Seed Feed Posts",
+  "description": "Generates ~100 realistic demo posts across all categories to keep the feed active during early growth. Scales down automatically as real user posts increase.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "interval",
+      "cron_expression": null,
+      "one_time_date": null,
+      "timezone": "UTC",
+      "interval_value": 3,
+      "interval_unit": "days",
+      "interval_anchor": "2026-02-18T02:30:55.570000",
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "auto_seed_feed_posts",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "seedFeedPosts",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  },
+  "x-base44-migrated-from-automation": {
+    "legacy_payload_function": "seedFeedPosts"
+  }
+}
