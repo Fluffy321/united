@@ -164,10 +164,14 @@ font-size:1rem;font-weight:800;transition:background .18s,transform .18s}
 .rev{background:var(--card);border-radius:var(--r-sm);padding:26px 24px;box-shadow:0 14px 34px -26px rgba(38,33,28,.42);display:flex;flex-direction:column}
 .rev.feature{grid-column:span 2;background:var(--brick);color:#fff6e9}
 @media(max-width:620px){.rev.feature{grid-column:span 1}}
-.rev .s{color:var(--mustard);letter-spacing:5px;margin-bottom:12px;font-size:1.3rem;line-height:1}
+.rev .s{display:flex;align-items:center;gap:12px;color:var(--mustard);margin-bottom:12px;font-size:1.3rem;line-height:1}
+.rev .s>[aria-hidden]{letter-spacing:5px}
+.rev .sn{font-size:.72rem;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);line-height:1}
+.rev.feature .sn{color:#e8c9a8}
 .rev p{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:1.08rem;line-height:1.5;flex:1;text-wrap:pretty}
 .rev.feature p{font-size:1.24rem}
 .rev.feature .s{font-size:1.5rem}
+.rev.feature .sn{font-size:.74rem}
 .rev .who{margin-top:14px;font-size:.86rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .rev.feature .who{color:var(--mustard-lt)}
 
@@ -409,31 +413,31 @@ footer .note{margin-top:10px;font-size:.82rem;opacity:.75}
 <div class="revs">
 
 <article class="rev feature">
-<div class="s" aria-hidden="true">★★★★★</div>
+<div class="s"><span aria-hidden="true">★★★★★</span><span class="sn">5 stars</span></div>
 <p>“Grateful for continued partnership with Granny Bea's for catering and event services.”</p>
 <div class="who">United Way of Palm Beach County</div>
 </article>
 
 <article class="rev">
-<div class="s" aria-hidden="true">★★★★★</div>
+<div class="s"><span aria-hidden="true">★★★★★</span><span class="sn">5 stars</span></div>
 <p>“The peanuts are the BEST!! My job hired her to cater lunch for all the employees and everyone was satisfied.”</p>
 <div class="who">Google review</div>
 </article>
 
 <article class="rev">
-<div class="s" aria-hidden="true">★★★★★</div>
+<div class="s"><span aria-hidden="true">★★★★★</span><span class="sn">5 stars</span></div>
 <p>“The food and customer service are always on point.”</p>
 <div class="who">Google review</div>
 </article>
 
 <article class="rev">
-<div class="s" aria-hidden="true">★★★★★</div>
+<div class="s"><span aria-hidden="true">★★★★★</span><span class="sn">5 stars</span></div>
 <p>“The potato was huge, the chicken was juicy and delicious. Just the perfect amount of spice.”</p>
 <div class="who">Google review</div>
 </article>
 
 <article class="rev">
-<div class="s" aria-hidden="true">★★★★★</div>
+<div class="s"><span aria-hidden="true">★★★★★</span><span class="sn">5 stars</span></div>
 <p>“If you're looking for some good peanuts in Palm Beach County this is the place.”</p>
 <div class="who">Google review</div>
 </article>
